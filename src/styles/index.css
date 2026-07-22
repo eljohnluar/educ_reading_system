@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global styles */
+body {
+  @apply bg-cream text-dark antialiased;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-200 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gold rounded-full hover:bg-amber-400;
+}
+
+/* Smooth transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-bold;
+}
+
+/* Card hover effects */
+.hover-scale {
+  @apply transition-transform duration-300 hover:scale-105;
+}
+
+/* Glassmorphism */
+.glass {
+  @apply bg-white bg-opacity-70 backdrop-blur-md;
+}
