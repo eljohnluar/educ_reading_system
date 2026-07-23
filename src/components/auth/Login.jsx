@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
 export default function Login() {
@@ -12,13 +13,45 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    if (loading) return
+    
     setLoading(true)
 
     try {
-      await signIn(email, password)
-      toast.success('Welcome back!')
-      navigate('/dashboard')
+      // Sign in
+      const response = await signIn(email, password)
+      
+      // Check response
+      if (!response || !response.user) {
+        throw new Error('Login failed. Please try again.')
+      }
+
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', response.user.id)
+        .single()
+
+      if (profileError) {
+        console.warn('Profile fetch error:', profileError)
+        toast.success('Welcome back!')
+        navigate('/dashboard')
+        return
+      }
+
+      // Redirect based on role
+      if (profile?.role === 'admin') {
+        toast.success('Welcome Admin!')
+        navigate('/admin')
+      } else {
+        toast.success('Welcome back!')
+        navigate('/dashboard')
+      }
+
     } catch (error) {
+      console.error('Login error:', error)
       toast.error(error.message || 'Login failed. Please try again.')
     } finally {
       setLoading(false)
@@ -53,6 +86,7 @@ export default function Login() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold focus:border-transparent outline-none transition-all"
               placeholder="you@example.com"
               required
+              disabled={loading}
             />
           </div>
 
@@ -67,12 +101,17 @@ export default function Login() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold focus:border-transparent outline-none transition-all"
               placeholder="••••••••"
               required
+              disabled={loading}
             />
           </div>
 
           <div className="flex items-center justify-between">
             <label className="flex items-center">
-              <input type="checkbox" className="rounded border-gray-300 text-gold focus:ring-gold" />
+              <input 
+                type="checkbox" 
+                className="rounded border-gray-300 text-gold focus:ring-gold"
+                disabled={loading}
+              />
               <span className="ml-2 text-sm text-gray-600">Remember me</span>
             </label>
             <Link to="/forgot-password" className="text-sm text-gold hover:underline">

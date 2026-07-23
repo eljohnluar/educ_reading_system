@@ -27,6 +27,7 @@ export default function Dashboard() {
         .order('display_order', { ascending: true })
 
       if (levelsError) throw levelsError
+      setLevels(levelsData || [])
 
       // Fetch user progress
       if (user) {
@@ -49,8 +50,6 @@ export default function Dashboard() {
         if (statsError) throw statsError
         setStats(statsData)
       }
-
-      setLevels(levelsData || [])
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       toast.error('Failed to load dashboard data')
@@ -59,18 +58,21 @@ export default function Dashboard() {
     }
   }
 
-  const getLevelStatus = (levelId) => {
-    const p = progress[levelId]
-    if (!p) return { status: 'locked', label: '🔒 Locked', color: 'bg-gray-200' }
-    if (p.is_completed) {
+  const getLevelStatus = (level) => {
+    const p = progress[level.id]
+    
+    if (p && p.is_completed) {
       if (p.score >= 3) {
         return { status: 'completed', label: '🏆 Completed', color: 'bg-green-500' }
       }
       return { status: 'failed', label: '❌ Failed', color: 'bg-red-500' }
     }
-    if (p.unlocked_at) {
+
+    const totalScore = stats?.total_score || 0
+    if ((p && p.unlocked_at) || level.unlock_requirement <= totalScore || level.display_order === 1) {
       return { status: 'in_progress', label: '🔄 In Progress', color: 'bg-yellow-500' }
     }
+
     return { status: 'locked', label: '🔒 Locked', color: 'bg-gray-200' }
   }
 
@@ -123,7 +125,7 @@ export default function Dashboard() {
       <h2 className="text-2xl font-bold text-dark">Your Learning Path</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {levels.map((level, index) => {
-          const status = getLevelStatus(level.id)
+          const status = getLevelStatus(level)
           const isUnlocked = status.status !== 'locked'
           const isCompleted = status.status === 'completed'
 

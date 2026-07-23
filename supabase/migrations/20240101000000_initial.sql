@@ -1,6 +1,7 @@
 -- ============================================
 -- READ WELL ENGLISH ZONE - COMPLETE SUPABASE SCHEMA
 -- Database: Supabase (PostgreSQL 15+)
+-- Version: 2.3.0
 -- ============================================
 
 -- ============================================
@@ -276,7 +277,7 @@ CREATE POLICY "Only admins can modify quiz questions" ON quiz_questions
 -- ============================================
 
 -- ----------------------------------------------------------------------------
--- Leaderboard View (FIXED - HAVING uses SUM(up.score) not alias)
+-- Leaderboard View
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW leaderboard AS
 SELECT 
@@ -441,25 +442,33 @@ $$ LANGUAGE plpgsql;
 -- ============================================
 
 -- ----------------------------------------------------------------------------
--- Auto-create Profile on User Signup (UPDATED)
+-- Auto-create Profile on User Signup (UPDATED - INCLUDES ROLE)
 -- ----------------------------------------------------------------------------
 -- Drop the function and any triggers depending on it automatically
 DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 
--- Create the new, robust function
+-- Create the updated function with ROLE support
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.profiles (id, username, email, avatar_url, privacy_agreed)
+  INSERT INTO public.profiles (
+    id, 
+    username, 
+    email, 
+    avatar_url, 
+    privacy_agreed,
+    role                    -- ✅ ADDED: Now includes role
+  )
   VALUES (
     NEW.id,
-    NEW.raw_user_meta_data->>'username',
+    COALESCE(NEW.raw_user_meta_data->>'username', NEW.email),
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'avatar_url', 'default-avatar.png'),
-    COALESCE((NEW.raw_user_meta_data->>'privacy_agreed')::boolean, false)
+    COALESCE((NEW.raw_user_meta_data->>'privacy_agreed')::boolean, false),
+    COALESCE(NEW.raw_user_meta_data->>'role', 'user')  -- ✅ Defaults to 'user'
   );
   
   -- Insert activity log
@@ -635,6 +644,10 @@ ORDER BY trigger_name;
 -- Check storage bucket
 SELECT '✅ Storage bucket created!' as status;
 SELECT id, name, public FROM storage.buckets WHERE id = 'stories';
+
+-- Test admin role support
+SELECT '✅ Admin role support added!' as status;
+SELECT 'Role will be set from raw_user_meta_data->>role' as info;
 
 -- ============================================
 -- END OF SCHEMA

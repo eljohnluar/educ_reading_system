@@ -43,18 +43,21 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Protected Routes */}
+            {/* Protected User Routes */}
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
-                {/* User Routes */}
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/leadership" element={<Leadership />} />
                 <Route path="/story/:level/:storyId" element={<StoryReader />} />
                 <Route path="/quiz/:level" element={<Quiz />} />
                 <Route path="/results/:level" element={<Results />} />
+              </Route>
+            </Route>
 
-                {/* Admin Routes */}
+            {/* Protected Admin Routes - requireAdmin={true} */}
+            <Route element={<ProtectedRoute requireAdmin={true} />}>
+              <Route element={<Layout />}>
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<UserManagement />} />
                 <Route path="/admin/levels" element={<LevelManagement />} />

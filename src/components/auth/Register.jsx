@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 
 export default function Register() {
@@ -9,11 +9,15 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    privacyAgreed: false
+    privacyAgreed: false,
+    adminCode: ''
   })
   const [loading, setLoading] = useState(false)
+  const [showAdminField, setShowAdminField] = useState(false)
   const navigate = useNavigate()
-  const { signUp } = useAuth()
+
+  // Admin code (change this)
+  const ADMIN_CODE = 'ADMIN2026'
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -27,6 +31,7 @@ export default function Register() {
     e.preventDefault()
     setLoading(true)
 
+    // Validations
     if (formData.password !== formData.confirmPassword) {
       toast.error('Passwords do not match')
       setLoading(false)
@@ -45,9 +50,30 @@ export default function Register() {
       return
     }
 
+    // Check admin code
+    const isAdmin = formData.adminCode.trim() === ADMIN_CODE
+    const role = isAdmin ? 'admin' : 'user'
+
     try {
-      await signUp(formData.email, formData.password, formData.username, formData.privacyAgreed)
-      toast.success('Registration successful! Please check your email for verification.')
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            username: formData.username,
+            privacy_agreed: formData.privacyAgreed,
+            role: role  // This will set the role in profiles table
+          }
+        }
+      })
+
+      if (error) throw error
+
+      toast.success(
+        isAdmin 
+          ? '🎉 Admin account created! Please verify your email.'
+          : 'Account created! Please verify your email.'
+      )
       navigate('/login')
     } catch (error) {
       toast.error(error.message || 'Registration failed. Please try again.')
@@ -73,6 +99,7 @@ export default function Register() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Username */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Username
@@ -90,6 +117,7 @@ export default function Register() {
             />
           </div>
 
+          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Address
@@ -105,6 +133,7 @@ export default function Register() {
             />
           </div>
 
+          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Password
@@ -121,6 +150,7 @@ export default function Register() {
             />
           </div>
 
+          {/* Confirm Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Confirm Password
@@ -136,6 +166,41 @@ export default function Register() {
             />
           </div>
 
+          {/* Toggle Admin Registration */}
+          <div className="text-center">
+            <button
+              type="button"
+              onClick={() => setShowAdminField(!showAdminField)}
+              className="text-sm text-gold hover:underline"
+            >
+              {showAdminField ? 'Hide admin registration' : 'Register as admin'}
+            </button>
+          </div>
+
+          {/* Admin Code Field */}
+          {showAdminField && (
+            <div className="border-t border-gray-200 pt-4">
+              <p className="text-sm text-gray-500 mb-2">Admin Registration</p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Admin Code
+                </label>
+                <input
+                  type="password"
+                  name="adminCode"
+                  value={formData.adminCode}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold focus:border-transparent outline-none transition-all"
+                  placeholder="Enter admin code"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Contact the system administrator for the code
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Privacy Policy */}
           <div className="flex items-start">
             <input
               type="checkbox"
