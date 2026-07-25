@@ -72,23 +72,23 @@ export default function Statistics() {
   }
 
   const statCards = [
-    { label: 'Total Users', value: stats?.total_users || 0, icon: '👥' },
-    { label: 'Total Completions', value: stats?.total_completions || 0, icon: '🏆' },
-    { label: 'Average Score', value: stats?.avg_score || 0, icon: '📊' },
-    { label: 'Perfect Scores', value: stats?.perfect_scores || 0, icon: '⭐' },
-    { label: 'Passing Scores', value: stats?.passing_scores || 0, icon: '✅' },
-    { label: 'Today\'s Logins', value: stats?.today_logins || 0, icon: '🔑' },
+    { label: 'Total Users', value: stats?.total_users || 0, icon: '' },
+    { label: 'Total Completions', value: stats?.total_completions || 0, icon: '' },
+    { label: 'Average Score', value: stats?.avg_score || 0, icon: '' },
+    { label: 'Perfect Scores', value: stats?.perfect_scores || 0, icon: '' },
+    { label: 'Passing Scores', value: stats?.passing_scores || 0, icon: '' },
+    { label: 'Today\'s Logins', value: stats?.today_logins || 0, icon: '' },
   ]
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-dark">📈 Statistics</h1>
+        <h1 className="text-3xl font-bold text-dark"> Statistics</h1>
         <button
           onClick={fetchAllStats}
           className="px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-500 transition-all"
         >
-          🔄 Refresh
+          Refresh
         </button>
       </div>
 
@@ -112,7 +112,7 @@ export default function Statistics() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Level Performance */}
         <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-dark mb-4">📚 Level Performance</h2>
+          <h2 className="text-lg font-bold text-dark mb-4"> Level Performance</h2>
           <div className="space-y-4">
             {levelStats.length === 0 ? (
               <p className="text-gray-500 text-center py-4">No data available</p>
@@ -129,7 +129,7 @@ export default function Statistics() {
                   <div key={level.id} className="border-b border-gray-100 pb-3 last:border-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xl">{level.icon || '📚'}</span>
+                        <span className="text-xl">{level.icon || ''}</span>
                         <span className="font-medium text-dark capitalize">{level.level_name}</span>
                       </div>
                       <div className="flex items-center space-x-4 text-sm">
@@ -159,7 +159,7 @@ export default function Statistics() {
 
         {/* User Growth */}
         <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-dark mb-4">📈 User Growth (Last 7 Days)</h2>
+          <h2 className="text-lg font-bold text-dark mb-4">User Growth (Last 7 Days)</h2>
           {userGrowth.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No new users in the last 7 days</p>
           ) : (

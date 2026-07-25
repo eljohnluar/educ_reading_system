@@ -81,7 +81,7 @@ export default function ActivityLog() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-dark">📋 Activity Log</h1>
+        <h1 className="text-3xl font-bold text-dark"> Activity Log</h1>
         <span className="text-sm text-gray-500">{activities.length} total entries</span>
       </div>
 

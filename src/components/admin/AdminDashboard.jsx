@@ -1,12 +1,20 @@
+// src/components/admin/AdminDashboardNew.jsx
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { adminService } from '../../services/adminService'
 import { supabase } from '../../lib/supabase'
-import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
 
-export default function AdminDashboard() {
+const COLORS = {
+  cream: '#E5DCCD',
+  gold: '#E9D8A9',
+  creamLight: '#E5DCCD20',
+  creamMedium: '#E5DCCD40',
+  goldLight: '#E9D8A920',
+}
+
+export default function AdminDashboardNew() {
   const { profile } = useAuth()
   const [stats, setStats] = useState(null)
   const [recentActivity, setRecentActivity] = useState([])
@@ -20,25 +28,21 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      
-      // Fetch dashboard stats
+
       const statsData = await adminService.getDashboardStats()
       setStats(statsData)
 
-      // Fetch recent activity
       const activity = await adminService.getActivityLogs(10)
       setRecentActivity(activity || [])
 
-      // Fetch top performers from leaderboard
       const { data, error } = await supabase
         .from('leaderboard')
         .select('*')
         .limit(5)
-      
+
       if (!error) {
         setTopPerformers(data || [])
       }
-
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
       toast.error('Failed to load dashboard data')
@@ -49,180 +53,300 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold"></div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '384px' }}>
+        <div style={{
+          width: '32px',
+          height: '32px',
+          border: `2px solid ${COLORS.gold}`,
+          borderTopColor: 'transparent',
+          borderRadius: '50%',
+          animation: 'spin 0.8s linear infinite'
+        }} />
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     )
   }
 
-  // ✅ Fixed: Complete statCards array
   const statCards = [
-    { 
-      label: 'Total Users', 
-      value: stats?.total_users || 0, 
-      icon: '👥', 
-      color: 'bg-blue-100 text-blue-600' 
-    },
-    { 
-      label: 'Levels Completed', 
-      value: stats?.total_completions || 0, 
-      icon: '🏆', 
-      color: 'bg-green-100 text-green-600' 
-    },
-    { 
-      label: 'Average Score', 
-      value: stats?.avg_score || 0, 
-      icon: '📊', 
-      color: 'bg-purple-100 text-purple-600' 
-    },
-    { 
-      label: 'Perfect Scores', 
-      value: stats?.perfect_scores || 0, 
-      icon: '⭐', 
-      color: 'bg-yellow-100 text-yellow-600' 
-    },
-    { 
-      label: 'Today\'s Logins', 
-      value: stats?.today_logins || 0, 
-      icon: '🔑', 
-      color: 'bg-indigo-100 text-indigo-600' 
-    }
-    // ✅ Added closing bracket
+    { label: 'Total Users', value: stats?.total_users || 0, icon: '' },
+    { label: 'Levels Completed', value: stats?.total_completions || 0, icon: '' },
+    { label: 'Average Score', value: stats?.avg_score || 0, icon: '' },
+    { label: 'Perfect Scores', value: stats?.perfect_scores || 0, icon: '' },
+    { label: "Today's Logins", value: stats?.today_logins || 0, icon: '' },
   ]
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 16px' }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '32px',
+        paddingBottom: '16px',
+        borderBottom: `1px solid ${COLORS.creamMedium}`
+      }}>
         <div>
-          <h1 className="text-3xl font-bold text-dark">Admin Dashboard</h1>
-          <p className="text-gray-500 mt-1">
-            Welcome back, {profile?.username || 'Admin'}! Here's your overview.
+          <h1 style={{ fontSize: '24px', fontWeight: 300, color: '#111827', letterSpacing: '-0.5px', margin: 0 }}>
+            Dashboard
+          </h1>
+          <p style={{ fontSize: '14px', color: '#9CA3AF', marginTop: '4px' }}>
+            Welcome back, {profile?.username || 'Admin'}
           </p>
         </div>
         <button
           onClick={fetchDashboardData}
-          className="px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-500 transition-all"
+          style={{
+            fontSize: '12px',
+            color: '#9CA3AF',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'color 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.color = COLORS.gold}
+          onMouseLeave={(e) => e.target.style.color = '#9CA3AF'}
         >
-          🔄 Refresh
+          Refresh
         </button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* Stats Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '12px',
+        marginBottom: '32px'
+      }}>
         {statCards.map((stat, index) => (
-          <motion.div
+          <div
             key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-all"
+            style={{
+              background: 'white',
+              borderRadius: '8px',
+              padding: '20px 16px',
+              border: `1px solid ${COLORS.creamMedium}`,
+              transition: 'border-color 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.gold}
+            onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.creamMedium}
           >
-            <div className={`w-12 h-12 rounded-full ${stat.color} flex items-center justify-center mx-auto mb-2 text-2xl`}>
-              {stat.icon}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <span style={{ fontSize: '20px' }}>{stat.icon}</span>
+              <div>
+                <p style={{ fontSize: '24px', fontWeight: 300, color: '#111827', margin: 0 }}>
+                  {stat.value}
+                </p>
+                <p style={{ fontSize: '10px', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
+                  {stat.label}
+                </p>
+              </div>
             </div>
-            <p className="text-2xl font-bold text-dark">{stat.value}</p>
-            <p className="text-xs text-gray-500">{stat.label}</p>
-          </motion.div>
+          </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Main Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '24px',
+        marginBottom: '24px'
+      }}>
         {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-dark mb-4">Recent Activity</h2>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+        <div
+          style={{
+            background: 'white',
+            borderRadius: '8px',
+            border: `1px solid ${COLORS.creamMedium}`,
+            padding: '20px',
+            transition: 'border-color 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.gold}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.creamMedium}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '12px', fontWeight: 500, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
+              Recent Activity
+            </h2>
+            <Link
+              to="/admin/activity"
+              style={{
+                fontSize: '12px',
+                color: '#9CA3AF',
+                textDecoration: 'none',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.color = COLORS.gold}
+              onMouseLeave={(e) => e.target.style.color = '#9CA3AF'}
+            >
+              View all →
+            </Link>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {recentActivity.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No recent activity</p>
+              <p style={{ fontSize: '14px', color: '#9CA3AF', textAlign: 'center', padding: '24px 0' }}>No activity</p>
             ) : (
-              recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center space-x-3 p-2 hover:bg-cream rounded-lg transition-colors">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gold bg-opacity-20 flex items-center justify-center text-sm">
-                    {activity.action_type === 'login' ? '🔑' :
-                     activity.action_type === 'register' ? '📝' :
-                     activity.action_type === 'level_complete' ? '🏆' :
+              recentActivity.slice(0, 5).map((activity) => (
+                <div
+                  key={activity.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px 0',
+                    borderBottom: `1px solid ${COLORS.creamLight}`,
+                  }}
+                >
+                  <span style={{ fontSize: '14px' }}>
+                    {activity.action_type === 'login' ? '' :
+                     activity.action_type === 'register' ? '' :
+                     activity.action_type === 'level_complete' ? '' :
                      '📌'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-dark truncate">
-                      {activity.profiles?.username || 'Unknown User'}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '14px', color: '#374151', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {activity.profiles?.username || 'Unknown'}
                     </p>
-                    <p className="text-xs text-gray-500 truncate">{activity.action}</p>
+                    <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {activity.action}
+                    </p>
                   </div>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                  <span style={{ fontSize: '12px', color: '#D1D5DB', whiteSpace: 'nowrap' }}>
                     {new Date(activity.created_at).toLocaleDateString()}
                   </span>
                 </div>
               ))
             )}
           </div>
-          <Link
-            to="/admin/activity"
-            className="block mt-4 text-center text-sm text-gold hover:underline"
-          >
-            View all activity →
-          </Link>
         </div>
 
         {/* Top Performers */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-bold text-dark mb-4">🏆 Top Performers</h2>
-          <div className="space-y-3 max-h-80 overflow-y-auto">
+        <div
+          style={{
+            background: 'white',
+            borderRadius: '8px',
+            border: `1px solid ${COLORS.creamMedium}`,
+            padding: '20px',
+            transition: 'border-color 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.borderColor = COLORS.gold}
+          onMouseLeave={(e) => e.currentTarget.style.borderColor = COLORS.creamMedium}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h2 style={{ fontSize: '12px', fontWeight: 500, color: '#4B5563', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
+              Top Performers
+            </h2>
+            <Link
+              to="/leadership"
+              style={{
+                fontSize: '12px',
+                color: '#9CA3AF',
+                textDecoration: 'none',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.color = COLORS.gold}
+              onMouseLeave={(e) => e.target.style.color = '#9CA3AF'}
+            >
+              View all →
+            </Link>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {topPerformers.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">No data yet</p>
+              <p style={{ fontSize: '14px', color: '#9CA3AF', textAlign: 'center', padding: '24px 0' }}>No data yet</p>
             ) : (
-              topPerformers.map((user, index) => (
-                <div key={user.user_id} className="flex items-center space-x-3 p-2 hover:bg-cream rounded-lg transition-colors">
-                  <span className={`font-bold w-6 ${
-                    index === 0 ? 'text-yellow-500' :
-                    index === 1 ? 'text-gray-400' :
-                    index === 2 ? 'text-amber-600' :
-                    'text-gray-500'
-                  }`}>
+              topPerformers.slice(0, 5).map((user, index) => (
+                <div
+                  key={user.user_id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px 0',
+                    borderBottom: `1px solid ${COLORS.creamLight}`,
+                  }}
+                >
+                  <span style={{
+                    fontSize: '12px',
+                    width: '20px',
+                    color: index === 0 ? COLORS.gold : '#9CA3AF'
+                  }}>
                     #{index + 1}
                   </span>
-                  <img
-                    src={user.avatar_url || '/assets/images/avatars/default.jpg'}
-                    alt={user.username}
-                    className="w-8 h-8 rounded-full object-cover"
-                    onError={(e) => {
-                      e.target.src = '/assets/images/avatars/default.jpg'
-                    }}
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-dark">{user.username}</p>
-                    <p className="text-xs text-gray-500">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: '14px', color: '#374151', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {user.username}
+                    </p>
+                    <p style={{ fontSize: '12px', color: '#9CA3AF', margin: 0 }}>
                       {user.completed_levels || 0} levels • {user.total_score || 0} pts
                     </p>
                   </div>
-                  <span className="text-sm font-bold text-gold">{user.total_score || 0}</span>
+                  <span style={{ fontSize: '14px', fontWeight: 300, color: COLORS.gold }}>
+                    {user.total_score || 0}
+                  </span>
                 </div>
               ))
             )}
           </div>
-          <Link
-            to="/leadership"
-            className="block mt-4 text-center text-sm text-gold hover:underline"
-          >
-            View full leaderboard →
-          </Link>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '12px'
+      }}>
         <Link
           to="/admin/users"
-          className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-all hover:bg-cream"
+          style={{
+            background: 'white',
+            borderRadius: '8px',
+            border: `1px solid ${COLORS.creamMedium}`,
+            padding: '12px 16px',
+            textAlign: 'center',
+            textDecoration: 'none',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = COLORS.gold
+            e.currentTarget.style.background = `${COLORS.creamLight}`
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = COLORS.creamMedium
+            e.currentTarget.style.background = 'white'
+          }}
         >
-          <div className="text-3xl mb-2">👥</div>
-          <p className="text-sm font-medium text-dark">Manage Users</p>
+          <span style={{ fontSize: '20px', display: 'block', marginBottom: '4px' }}></span>
+          <span style={{ fontSize: '12px', color: '#6B7280' }}>Manage Users</span>
         </Link>
         <Link
           to="/admin/statistics"
-          className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-all hover:bg-cream"
+          style={{
+            background: 'white',
+            borderRadius: '8px',
+            border: `1px solid ${COLORS.creamMedium}`,
+            padding: '12px 16px',
+            textAlign: 'center',
+            textDecoration: 'none',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = COLORS.gold
+            e.currentTarget.style.background = `${COLORS.creamLight}`
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = COLORS.creamMedium
+            e.currentTarget.style.background = 'white'
+          }}
         >
-          <div className="text-3xl mb-2">📈</div>
-          <p className="text-sm font-medium text-dark">Statistics</p>
+          <span style={{ fontSize: '20px', display: 'block', marginBottom: '4px' }}></span>
+          <span style={{ fontSize: '12px', color: '#6B7280' }}>Statistics</span>
         </Link>
       </div>
     </div>

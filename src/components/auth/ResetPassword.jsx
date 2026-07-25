@@ -40,8 +40,8 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-white p-4">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-8 max-w-md w-full">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-dark">Set New Password</h2>
           <p className="text-gray-500 mt-2">Create a new password for your account</p>

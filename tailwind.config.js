@@ -1,3 +1,4 @@
+// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,11 +8,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        'cream': '#E5DCCD',
+        'cream': '#E9D2A9',
         'gold': '#E9D2A9',
-        'dark': '#2C3E50',
-        'medium': '#5D4E37',
-        'light': '#7F8C8D',
+        'gold-dark': '#C8A970',
+        'dark': '#2B2217',
+        'medium': '#5C4E3D',
+        'light': '#8C7E6C',
         'easy-green': '#8BC34A',
         'average-orange': '#FFB74D',
         'difficult-purple': '#CE93D8',

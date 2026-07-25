@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
+import '../landing/LandingPage.css'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -59,8 +60,20 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #2C3E50 0%, #3d566e 40%, #E9D2A9 100%)'
+      }}
+    >
+      {/* Floating decorative elements */}
+      <span className="floating-book">📚</span>
+      <span className="floating-book">📖</span>
+      <span className="floating-book">✏️</span>
+      <span className="floating-book">🎓</span>
+      <span className="floating-book">📕</span>
+
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full border border-white/20 relative z-10">
         <Link
           to="/"
           className="inline-flex items-center text-sm text-gray-500 hover:text-dark transition-colors mb-6 group"

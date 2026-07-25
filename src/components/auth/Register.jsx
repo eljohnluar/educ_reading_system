@@ -83,8 +83,8 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-white p-4">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-8 max-w-md w-full my-8">
         <Link
           to="/"
           className="inline-flex items-center text-sm text-gray-500 hover:text-dark transition-colors mb-6 group"
