@@ -136,31 +136,18 @@ export default function UserManagement() {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <img
-                          src={user.avatar_url || '/assets/images/avatars/default.jpg'}
-                          alt={user.username}
-                          className="w-8 h-8 rounded-full object-cover"
-                          onError={(e) => {
-                            e.target.src = '/assets/images/avatars/default.jpg'
-                          }}
-                        />
                         <span className="font-medium text-dark">{user.username}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-gray-600">{user.email}</td>
                     <td className="px-6 py-4">
-                      <select
-                        value={user.role}
-                        onChange={(e) => handleRoleUpdate(user.id, e.target.value)}
-                        className={`px-2 py-1 rounded text-sm font-medium border-0 focus:ring-2 focus:ring-gold ${
-                          user.role === 'admin' 
-                            ? 'bg-purple-100 text-purple-700' 
-                            : 'bg-blue-100 text-blue-700'
-                        }`}
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                      <span className={`px-2 py-1 rounded text-sm font-medium ${
+                        user.role === 'admin' 
+                          ? 'bg-purple-100 text-purple-700' 
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {user.role}
+                      </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {new Date(user.created_at).toLocaleDateString()}
@@ -205,14 +192,6 @@ export default function UserManagement() {
 
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
-                <img
-                  src={selectedUser.avatar_url || '/assets/images/avatars/default.jpg'}
-                  alt={selectedUser.username}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-gold"
-                  onError={(e) => {
-                    e.target.src = '/assets/images/avatars/default.jpg'
-                  }}
-                />
                 <div>
                   <p className="text-xl font-bold text-dark">{selectedUser.username}</p>
                   <p className="text-gray-500">{selectedUser.email}</p>

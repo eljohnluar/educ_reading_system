@@ -68,7 +68,7 @@ export default function ActivityLog() {
     return matchesFilter && matchesSearch
   })
 
-  const actionTypes = [...new Set(activities.map(a => a.action_type))]
+  const actionTypes = [...new Set(activities.map(a => a.action_type).filter(Boolean))]
 
   if (loading) {
     return (
@@ -118,7 +118,7 @@ export default function ActivityLog() {
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {type.replace('_', ' ')}
+                {(type || '').replace('_', ' ')}
               </button>
             ))}
           </div>
@@ -153,20 +153,11 @@ export default function ActivityLog() {
                     transition={{ delay: index * 0.01 }}
                     className="hover:bg-cream transition-colors"
                   >
+                    {/* ✅ Removed image, just showing username */}
                     <td className="px-6 py-4">
-                      <div className="flex items-center space-x-3">
-                        <img
-                          src={activity.profiles?.avatar_url || '/assets/images/avatars/default.jpg'}
-                          alt={activity.profiles?.username || 'Unknown'}
-                          className="w-8 h-8 rounded-full object-cover"
-                          onError={(e) => {
-                            e.target.src = '/assets/images/avatars/default.jpg'
-                          }}
-                        />
-                        <span className="font-medium text-dark">
-                          {activity.profiles?.username || 'Unknown User'}
-                        </span>
-                      </div>
+                      <span className="font-medium text-dark">
+                        {activity.profiles?.username || 'Unknown User'}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
@@ -176,7 +167,7 @@ export default function ActivityLog() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${getActionColor(activity.action_type)} bg-gray-100`}>
-                        {activity.action_type.replace('_', ' ')}
+                        {(activity.action_type || 'unknown').replace('_', ' ')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">

@@ -8,12 +8,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true
-  }
-})
+   auth: {
+     autoRefreshToken: true,
+     persistSession: true,
+     detectSessionInUrl: true
+   },
+   globalHeaders: {
+     Accept: 'application/json'
+   }
+ })
 
 export const STORAGE_BUCKET = 'stories'
 

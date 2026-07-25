@@ -32,22 +32,22 @@ export default function Login() {
         .from('profiles')
         .select('role')
         .eq('id', response.user.id)
-        .single()
+        .maybeSingle()
 
       if (profileError) {
         console.warn('Profile fetch error:', profileError)
         toast.success('Welcome back!')
-        navigate('/dashboard')
+        navigate('/loading', { state: { redirectTo: '/dashboard' } })
         return
       }
 
-      // Redirect based on role
+      // Redirect based on role — go through loading screen first
       if (profile?.role === 'admin') {
         toast.success('Welcome Admin!')
-        navigate('/admin')
+        navigate('/loading', { state: { redirectTo: '/admin' } })
       } else {
         toast.success('Welcome back!')
-        navigate('/dashboard')
+        navigate('/loading', { state: { redirectTo: '/dashboard' } })
       }
 
     } catch (error) {
@@ -61,6 +61,13 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm text-gray-500 hover:text-dark transition-colors mb-6 group"
+        >
+          <span className="mr-1 transition-transform group-hover:-translate-x-1">←</span>
+          Back to Home
+        </Link>
         <div className="text-center mb-8">
           <img 
             src="/assets/images/icons/logo.png" 

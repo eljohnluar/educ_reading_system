@@ -32,10 +32,10 @@ export default function Profile() {
   const fetchUserStats = async () => {
     try {
       const { data, error } = await supabase
-        .rpc('get_user_stats', { user_id_param: user.id })
+        .rpc('get_user_stats', { p_user_id: user.id })
       
       if (error) throw error
-      setStats(data)
+      setStats(Array.isArray(data) ? data[0] : data)
     } catch (error) {
       console.error('Error fetching stats:', error)
     }
@@ -54,6 +54,37 @@ export default function Profile() {
       setIsEditing(false)
     } catch (error) {
       toast.error(error.message || 'Failed to update profile')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const uploadAvatar = async (event) => {
+    try {
+      setLoading(true)
+      const file = event.target.files[0]
+      if (!file) return
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file)
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      const { data } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      setFormData(prev => ({ ...prev, avatar_url: data.publicUrl }))
+      toast.success('Image uploaded! Click Save Changes to update your profile.')
+    } catch (error) {
+      toast.error(error.message || 'Error uploading image')
     } finally {
       setLoading(false)
     }
@@ -116,7 +147,7 @@ export default function Profile() {
         <div className="flex items-start space-x-6">
           <div className="flex-shrink-0">
             <img
-              src={profile.avatar_url || '/assets/images/avatars/default.jpg'}
+              src={(isEditing ? formData.avatar_url : profile.avatar_url) || '/assets/images/avatars/default.jpg'}
               alt="Avatar"
               className="w-24 h-24 rounded-full object-cover border-4 border-gold"
               onError={(e) => {
@@ -160,15 +191,16 @@ export default function Profile() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Avatar URL
+                  Avatar Image
                 </label>
                 <input
-                  type="text"
-                  value={formData.avatar_url}
-                  onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
+                  type="file"
+                  accept="image/*"
+                  onChange={uploadAvatar}
+                  disabled={loading}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold focus:border-transparent outline-none"
-                  placeholder="https://example.com/avatar.jpg"
                 />
+                <p className="text-xs text-gray-500 mt-1">Select an image to upload it to your profile.</p>
               </div>
               <button
                 type="submit"

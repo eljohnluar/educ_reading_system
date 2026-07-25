@@ -10,11 +10,14 @@ export default function Leadership() {
   const [levelLeaderboard, setLevelLeaderboard] = useState({})
   const [selectedLevel, setSelectedLevel] = useState('overall')
   const [loading, setLoading] = useState(true)
-  const [levels, setLevels] = useState([])
+  const [levels] = useState([
+    { level_name: 'easy' },
+    { level_name: 'average' },
+    { level_name: 'difficult' }
+  ])
 
   useEffect(() => {
     fetchLeaderboardData()
-    fetchLevels()
   }, [])
 
   useEffect(() => {
@@ -23,19 +26,6 @@ export default function Leadership() {
     }
   }, [selectedLevel])
 
-  const fetchLevels = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('levels')
-        .select('level_name')
-        .order('display_order')
-      
-      if (error) throw error
-      setLevels(data || [])
-    } catch (error) {
-      console.error('Error fetching levels:', error)
-    }
-  }
 
   const fetchLeaderboardData = async () => {
     try {

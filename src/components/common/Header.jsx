@@ -66,14 +66,6 @@ export default function Header() {
               {/* ✅ Show admin label in header instead */}
               {isAdmin && (
                 <div className="flex items-center space-x-2">
-                  <img 
-                    src={profile?.avatar_url || '/assets/images/avatars/default.jpg'}
-                    alt="Avatar"
-                    className="w-8 h-8 rounded-full object-cover border-2 border-gold"
-                    onError={(e) => {
-                      e.target.src = '/assets/images/avatars/default.jpg'
-                    }}
-                  />
                   <span className="text-sm font-medium text-gold hidden md:block">
                     Admin
                   </span>

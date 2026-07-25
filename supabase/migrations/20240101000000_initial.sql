@@ -1,7 +1,6 @@
 -- ============================================
--- READ WELL ENGLISH ZONE - COMPLETE SUPABASE SCHEMA
+-- READ WELL ENGLISH ZONE - SIMPLIFIED SUPABASE SCHEMA
 -- Database: Supabase (PostgreSQL 15+)
--- Version: 2.3.0
 -- ============================================
 
 -- ============================================
@@ -25,28 +24,13 @@ CREATE TABLE IF NOT EXISTS profiles (
 );
 
 -- ----------------------------------------------------------------------------
--- Levels Table
--- ----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS levels (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  level_name VARCHAR(20) NOT NULL UNIQUE,
-  display_order INT DEFAULT 1,
-  unlock_requirement INT DEFAULT 3,
-  description TEXT DEFAULT '',
-  icon VARCHAR(50) DEFAULT '📚',
-  color_code VARCHAR(7) DEFAULT '#E9D2A9',
-  folder_path VARCHAR(100) DEFAULT 'stories/',
-  created_at TIMESTAMP DEFAULT NOW()
-);
-
--- ----------------------------------------------------------------------------
--- User Progress Table
+-- User Progress Table (Simplified - uses level_name instead of level_id)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS user_progress (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  level_id UUID NOT NULL REFERENCES levels(id) ON DELETE CASCADE,
-  story_id INT DEFAULT 0,
+  level_name VARCHAR(20) NOT NULL CHECK (level_name IN ('easy', 'average', 'difficult')),
+  story_id INT DEFAULT 1,
   score INT DEFAULT 0,
   total_questions INT DEFAULT 6,
   correct_answers INT DEFAULT 0,
@@ -55,7 +39,9 @@ CREATE TABLE IF NOT EXISTS user_progress (
   started_at TIMESTAMP,
   completed_at TIMESTAMP,
   time_spent INT DEFAULT 0,
-  UNIQUE(user_id, level_id)
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(user_id, level_name)
 );
 
 -- ----------------------------------------------------------------------------
@@ -84,13 +70,13 @@ CREATE TABLE IF NOT EXISTS password_resets (
 );
 
 -- ----------------------------------------------------------------------------
--- Feedback Table
+-- Feedback Table (Simplified - uses level_name instead of level_id)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS feedback (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  level_id UUID NOT NULL REFERENCES levels(id) ON DELETE CASCADE,
-  story_id INT DEFAULT 0,
+  level_name VARCHAR(20) NOT NULL CHECK (level_name IN ('easy', 'average', 'difficult')),
+  story_id INT DEFAULT 1,
   rating INT CHECK (rating >= 1 AND rating <= 5),
   comment TEXT,
   is_anonymous BOOLEAN DEFAULT FALSE,
@@ -98,11 +84,11 @@ CREATE TABLE IF NOT EXISTS feedback (
 );
 
 -- ----------------------------------------------------------------------------
--- Story Metadata Table
+-- Story Metadata Table (Simplified - uses level_name instead of level_id)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS story_metadata (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  level_id UUID NOT NULL REFERENCES levels(id) ON DELETE CASCADE,
+  level_name VARCHAR(20) NOT NULL CHECK (level_name IN ('easy', 'average', 'difficult')),
   story_id INT NOT NULL,
   title VARCHAR(100) NOT NULL,
   file_path TEXT NOT NULL,
@@ -114,7 +100,7 @@ CREATE TABLE IF NOT EXISTS story_metadata (
   is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(level_id, story_id)
+  UNIQUE(level_name, story_id)
 );
 
 -- ----------------------------------------------------------------------------
@@ -132,12 +118,12 @@ CREATE TABLE IF NOT EXISTS user_activity_log (
 );
 
 -- ----------------------------------------------------------------------------
--- Quiz Questions Table
+-- Quiz Questions Table (Simplified - uses level_name instead of level_id)
 -- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS quiz_questions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  level_id UUID NOT NULL REFERENCES levels(id) ON DELETE CASCADE,
-  story_id INT DEFAULT 0,
+  level_name VARCHAR(20) NOT NULL CHECK (level_name IN ('easy', 'average', 'difficult')),
+  story_id INT DEFAULT 1,
   display_order INT DEFAULT 1,
   question_text TEXT NOT NULL,
   option_a TEXT NOT NULL,
@@ -154,7 +140,6 @@ CREATE TABLE IF NOT EXISTS quiz_questions (
 -- ============================================
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE levels ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE login_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE password_resets ENABLE ROW LEVEL SECURITY;
@@ -178,17 +163,6 @@ CREATE POLICY "Users can update own profile" ON profiles
 
 CREATE POLICY "Users can insert own profile" ON profiles
   FOR INSERT WITH CHECK (auth.uid() = id);
-
--- ----------------------------------------------------------------------------
--- Levels Policies
--- ----------------------------------------------------------------------------
-CREATE POLICY "Anyone can view levels" ON levels
-  FOR SELECT USING (true);
-
-CREATE POLICY "Only admins can modify levels" ON levels
-  FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
-  );
 
 -- ----------------------------------------------------------------------------
 -- User Progress Policies
@@ -277,7 +251,7 @@ CREATE POLICY "Only admins can modify quiz questions" ON quiz_questions
 -- ============================================
 
 -- ----------------------------------------------------------------------------
--- Leaderboard View
+-- Leaderboard View (Simplified)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE VIEW leaderboard AS
 SELECT 
@@ -285,7 +259,7 @@ SELECT
   p.username,
   p.avatar_url,
   p.role,
-  COUNT(DISTINCT CASE WHEN up.is_completed = true THEN up.level_id END) as completed_levels,
+  COUNT(DISTINCT CASE WHEN up.is_completed = true THEN up.level_name END) as completed_levels,
   SUM(up.score) as total_score,
   ROUND(AVG(up.score), 2) as avg_score,
   MAX(up.completed_at) as last_completed,
@@ -297,7 +271,7 @@ GROUP BY p.id, p.username, p.avatar_url, p.role
 HAVING SUM(up.score) > 0;
 
 -- ----------------------------------------------------------------------------
--- Level Leaderboard Function
+-- Level Leaderboard Function (Simplified)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION get_level_leaderboard(level_name_param TEXT)
 RETURNS TABLE (
@@ -317,98 +291,77 @@ BEGIN
     DENSE_RANK() OVER (ORDER BY up.score DESC, up.completed_at ASC) as level_rank
   FROM profiles p
   INNER JOIN user_progress up ON p.id = up.user_id
-  INNER JOIN levels l ON up.level_id = l.id
   WHERE up.is_completed = true
     AND up.score > 0
-    AND l.level_name = level_name_param
+    AND up.level_name = level_name_param
   ORDER BY level_rank ASC
   LIMIT 20;
 END;
 $$ LANGUAGE plpgsql;
 
 -- ----------------------------------------------------------------------------
--- User Progress Summary Function
+-- User Progress Summary Function (Simplified - no levels table)
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_user_progress_summary(user_id_param UUID)
+CREATE OR REPLACE FUNCTION get_user_progress_summary(p_user_id UUID)
 RETURNS TABLE (
-  level_id UUID,
   level_name VARCHAR,
-  display_order INT,
-  icon VARCHAR,
-  color_code VARCHAR,
   score INT,
   is_completed BOOLEAN,
-  status TEXT
-) AS $$
+  status TEXT,
+  unlocked_at TIMESTAMP
+) LANGUAGE plpgsql AS $$
 BEGIN
   RETURN QUERY
   SELECT 
-    l.id,
-    l.level_name,
-    l.display_order,
-    l.icon,
-    l.color_code,
+    COALESCE(up.level_name, l.level_name) as level_name,
     COALESCE(up.score, 0) as score,
     COALESCE(up.is_completed, false) as is_completed,
     CASE 
-      WHEN up.is_completed IS NULL THEN 'locked'
+      WHEN up.is_completed IS NULL AND up.unlocked_at IS NULL AND l.level_name != 'easy' THEN 'locked'
+      WHEN up.is_completed IS NULL AND l.level_name = 'easy' THEN 'in_progress'
       WHEN up.is_completed = false AND up.unlocked_at IS NOT NULL THEN 'in_progress'
       WHEN up.is_completed = true AND up.score >= 3 THEN 'completed'
       WHEN up.is_completed = true AND up.score < 3 THEN 'failed'
       ELSE 'locked'
-    END as status
-  FROM levels l
-  LEFT JOIN user_progress up ON l.id = up.level_id AND up.user_id = user_id_param
-  ORDER BY l.display_order ASC;
+    END as status,
+    up.unlocked_at
+  FROM (VALUES 
+    ('easy'), ('average'), ('difficult')
+  ) AS l(level_name)
+  LEFT JOIN user_progress up ON l.level_name = up.level_name AND up.user_id = p_user_id
+  ORDER BY 
+    CASE l.level_name
+      WHEN 'easy' THEN 1
+      WHEN 'average' THEN 2
+      WHEN 'difficult' THEN 3
+    END;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- ----------------------------------------------------------------------------
--- User Statistics Function
+-- User Statistics Function (Simplified)
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION get_user_stats(user_id_param UUID)
+CREATE OR REPLACE FUNCTION get_user_stats(p_user_id UUID)
 RETURNS TABLE (
-  username VARCHAR,
-  email VARCHAR,
-  role TEXT,
-  member_since TIMESTAMP,
-  last_login TIMESTAMP,
-  total_levels_attempted BIGINT,
-  levels_completed BIGINT,
   total_score BIGINT,
+  levels_completed BIGINT,
   average_score NUMERIC,
-  highest_score INT,
   perfect_scores BIGINT
-) AS $$
+) LANGUAGE plpgsql AS $$
 BEGIN
   RETURN QUERY
   SELECT 
-    p.username,
-    p.email,
-    p.role,
-    p.created_at as member_since,
-    p.last_login,
-    COUNT(DISTINCT up.level_id) as total_levels_attempted,
-    SUM(CASE WHEN up.is_completed = true THEN 1 ELSE 0 END) as levels_completed,
-    SUM(up.score) as total_score,
-    ROUND(AVG(up.score), 2) as average_score,
-    MAX(up.score) as highest_score,
-    (
-      SELECT COUNT(*) 
-      FROM user_progress up2 
-      WHERE up2.is_completed = true 
-        AND up2.score >= 5 
-        AND up2.user_id = user_id_param
-    ) as perfect_scores
-  FROM profiles p
-  LEFT JOIN user_progress up ON p.id = up.user_id
-  WHERE p.id = user_id_param
-  GROUP BY p.id;
+    COALESCE(SUM(up.score), 0)::BIGINT as total_score,
+    COUNT(CASE WHEN up.is_completed = true THEN 1 END)::BIGINT as levels_completed,
+    ROUND(AVG(CASE WHEN up.is_completed = true THEN up.score END), 2) as average_score,
+    COUNT(CASE WHEN up.is_completed = true AND up.score >= 5 THEN 1 END)::BIGINT as perfect_scores
+  FROM user_progress up
+  WHERE up.user_id = p_user_id;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 -- ----------------------------------------------------------------------------
--- Dashboard Statistics Function
+-- Dashboard Statistics Function (Simplified)
 -- ----------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION get_dashboard_stats()
 RETURNS TABLE (
@@ -444,10 +397,8 @@ $$ LANGUAGE plpgsql;
 -- ----------------------------------------------------------------------------
 -- Auto-create Profile on User Signup (UPDATED - INCLUDES ROLE)
 -- ----------------------------------------------------------------------------
--- Drop the function and any triggers depending on it automatically
 DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
 
--- Create the updated function with ROLE support
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -460,7 +411,7 @@ BEGIN
     email, 
     avatar_url, 
     privacy_agreed,
-    role                    -- ✅ ADDED: Now includes role
+    role
   )
   VALUES (
     NEW.id,
@@ -468,7 +419,7 @@ BEGIN
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'avatar_url', 'default-avatar.png'),
     COALESCE((NEW.raw_user_meta_data->>'privacy_agreed')::boolean, false),
-    COALESCE(NEW.raw_user_meta_data->>'role', 'user')  -- ✅ Defaults to 'user'
+    COALESCE(NEW.raw_user_meta_data->>'role', 'user')
   );
   
   -- Insert activity log
@@ -484,76 +435,10 @@ BEGIN
 END;
 $$;
 
--- Attach the new trigger
 CREATE TRIGGER trigger_handle_new_user
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE PROCEDURE public.handle_new_user();
-
--- ----------------------------------------------------------------------------
--- Level Completion Trigger
--- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION handle_level_completion()
-RETURNS TRIGGER AS $$
-DECLARE
-  next_level_id UUID;
-BEGIN
-  IF NEW.is_completed = true AND OLD.is_completed = false AND NEW.score >= 3 THEN
-    -- Unlock next level
-    SELECT id INTO next_level_id
-    FROM levels 
-    WHERE display_order > (SELECT display_order FROM levels WHERE id = NEW.level_id)
-    ORDER BY display_order ASC 
-    LIMIT 1;
-    
-    IF next_level_id IS NOT NULL THEN
-      INSERT INTO user_progress (user_id, level_id, unlocked_at) 
-      VALUES (NEW.user_id, next_level_id, NOW())
-      ON CONFLICT (user_id, level_id) 
-      DO UPDATE SET unlocked_at = NOW();
-    END IF;
-    
-    -- Log activity
-    INSERT INTO user_activity_log (user_id, action, action_type, details)
-    VALUES (
-      NEW.user_id,
-      CONCAT('Completed level: ', (SELECT level_name FROM levels WHERE id = NEW.level_id)),
-      'level_complete',
-      jsonb_build_object('level_id', NEW.level_id, 'score', NEW.score)
-    );
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_level_completion
-AFTER UPDATE ON user_progress
-FOR EACH ROW
-EXECUTE FUNCTION handle_level_completion();
-
--- ----------------------------------------------------------------------------
--- Login Activity Trigger
--- ----------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION handle_login_activity()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO user_activity_log (user_id, action, action_type, details, ip_address)
-  VALUES (
-    NEW.id,
-    'User logged in',
-    'login',
-    jsonb_build_object('method', 'password'),
-    COALESCE(current_setting('request.headers', true)::json->>'x-forwarded-for', '127.0.0.1')
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_login_activity
-AFTER UPDATE ON profiles
-FOR EACH ROW
-WHEN (NEW.last_login IS NOT NULL AND OLD.last_login IS NULL)
-EXECUTE FUNCTION handle_login_activity();
 
 -- ----------------------------------------------------------------------------
 -- Auto-Update UpdatedAt Timestamp
@@ -581,20 +466,37 @@ EXECUTE FUNCTION update_updated_at_column();
 -- ============================================
 
 -- ----------------------------------------------------------------------------
--- Create Storage Bucket
+-- Stories Bucket (for story files)
 -- ----------------------------------------------------------------------------
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'stories',
   'stories',
   true,
-  52428800, -- 50MB limit
+  52428800, -- 50MB
   ARRAY['text/plain', 'audio/mpeg', 'image/jpeg', 'image/png', 'application/json']
 )
 ON CONFLICT (id) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
--- Storage Policies
+-- Avatars Bucket (for user profile images) - ✅ ADDED
+-- ----------------------------------------------------------------------------
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'avatars',
+  'avatars',
+  true, -- Public bucket so images can be viewed without auth
+  2097152, -- 2MB limit
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================
+-- 7. STORAGE POLICIES
+-- ============================================
+
+-- ----------------------------------------------------------------------------
+-- Stories Policies
 -- ----------------------------------------------------------------------------
 CREATE POLICY "Anyone can view stories" ON storage.objects
   FOR SELECT USING (bucket_id = 'stories');
@@ -617,37 +519,109 @@ CREATE POLICY "Admins can delete stories" ON storage.objects
     AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
   );
 
+-- ----------------------------------------------------------------------------
+-- Avatars Policies - ✅ ADDED
+-- ----------------------------------------------------------------------------
+CREATE POLICY "Anyone can view avatars" ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+
+CREATE POLICY "Users can upload their own avatar" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'avatars' 
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "Users can update their own avatar" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'avatars' 
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "Users can delete their own avatar" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'avatars' 
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+CREATE POLICY "Admins can manage all avatars" ON storage.objects
+  FOR ALL USING (
+    bucket_id = 'avatars' 
+    AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
 -- ============================================
--- 7. VERIFICATION QUERIES
+-- 8. INSERT DATA (Fixed 3 Levels)
 -- ============================================
 
--- Check all tables
+-- ----------------------------------------------------------------------------
+-- Story Metadata
+-- ----------------------------------------------------------------------------
+INSERT INTO story_metadata (level_name, story_id, title, file_path, audio_url, image_url, json_path, word_count, audio_duration) VALUES
+('easy', 1, 'The Lost Wallet', 'stories/easy/story_1.txt', 'stories/easy/story_1.mp3', 'stories/easy/story_1.jpg', 'stories/easy/story_1.json', 150, 45.0),
+('average', 1, 'The School Podcast', 'stories/average/story_1.txt', 'stories/average/story_1.mp3', 'stories/average/story_1.jpg', 'stories/average/story_1.json', 180, 55.0),
+('difficult', 1, 'Beyond the Certificate', 'stories/difficult/story_1.txt', 'stories/difficult/story_1.mp3', 'stories/difficult/story_1.jpg', 'stories/difficult/story_1.json', 220, 65.0);
+
+-- ----------------------------------------------------------------------------
+-- Quiz Questions - Easy Level
+-- ----------------------------------------------------------------------------
+INSERT INTO quiz_questions (level_name, story_id, display_order, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation) VALUES
+('easy', 1, 1, 'Where did Joshua find the wallet?', 'Inside the school library', 'On a park bench', 'At a bus stop', 'In a classroom', 'b', 'The story says Joshua found the wallet lying on a park bench.'),
+('easy', 1, 2, 'What did Joshua find inside the wallet?', 'Money only', 'An identification card and money only', 'An identification card, cash, and important cards', 'A cellphone and cash', 'c', 'The story mentions an identification card, some cash, and several important cards.'),
+('easy', 1, 3, 'Why did Joshua go to the address on the ID?', 'To ask for directions', 'To return the wallet to its owner', 'To claim a reward', 'To visit a relative', 'b', 'Joshua looked at the address and decided to return the wallet to its owner.'),
+('easy', 1, 4, 'How did the elderly woman react when she saw Joshua?', 'She became angry.', 'She ignored him.', 'She was relieved and thankful.', 'She called the police.', 'c', 'The woman smiled with relief and thanked Joshua for his honesty.'),
+('easy', 1, 5, 'Why did Joshua refuse the reward?', 'He was in a hurry.', 'He believed returning the wallet was the right thing to do.', 'He did not like the owner.', 'He wanted a bigger reward.', 'b', 'Joshua said that returning the wallet was simply the right thing to do.'),
+('easy', 1, 6, 'What is the main lesson of the story?', 'Money is the key to happiness.', 'Honesty and kindness are valuable qualities.', 'It is important to avoid helping strangers.', 'Rewards are more important than good deeds.', 'b', 'The story teaches that honesty and kindness are valuable qualities that inspire others.');
+
+-- ----------------------------------------------------------------------------
+-- Quiz Questions - Average Level
+-- ----------------------------------------------------------------------------
+INSERT INTO quiz_questions (level_name, story_id, display_order, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation) VALUES
+('average', 1, 1, 'What project did the journalism club create?', 'A school newspaper', 'A television program', 'A weekly podcast', 'A social media page', 'c', 'The club decided to create a weekly podcast to discuss school events.'),
+('average', 1, 2, 'Why did only a few students listen to the podcast at first?', 'The episodes were too long.', 'Students preferred watching short videos.', 'The teachers did not support the project.', 'The podcast was available only once a month.', 'b', 'The story says many students preferred watching short videos online.'),
+('average', 1, 3, 'How did the club improve the podcast?', 'They shortened every episode.', 'They added music only.', 'They invited teachers, alumni, and student leaders as guests.', 'They charged students to listen.', 'c', 'The club improved by inviting teachers, alumni, and student leaders to share their experiences.'),
+('average', 1, 4, 'What happened by the end of the semester?', 'The project ended because of low interest.', 'The podcast became popular in the school.', 'Students stopped listening to the episodes.', 'The school canceled the program.', 'b', 'The podcast became one of the school''s most popular student projects.'),
+('average', 1, 5, 'Which quality contributed most to the club''s success?', 'Luck', 'Persistence and willingness to improve', 'Wealth', 'Competition', 'b', 'The adviser praised the club for their persistence and willingness to improve.'),
+('average', 1, 6, 'What is the central idea of the passage?', 'Podcasts are better than videos.', 'Success often comes through persistence and continuous improvement.', 'Journalism is the easiest school club.', 'Student projects should always be entertaining.', 'b', 'The passage shows that success comes through persistence and continuous improvement.');
+
+-- ----------------------------------------------------------------------------
+-- Quiz Questions - Difficult Level
+-- ----------------------------------------------------------------------------
+INSERT INTO quiz_questions (level_name, story_id, display_order, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation) VALUES
+('difficult', 1, 1, 'Why were many students eager to earn awards?', 'To receive cash prizes', 'To strengthen their college applications', 'To become teachers', 'To avoid graduation', 'b', 'The story says students focused on earning awards to strengthen their college applications.'),
+('difficult', 1, 2, 'What volunteer work did Nathan do?', 'He coached a basketball team.', 'He organized school events.', 'He taught computer skills to senior citizens.', 'He tutored elementary students in mathematics.', 'c', 'Nathan spent his weekends teaching basic computer skills to senior citizens.'),
+('difficult', 1, 3, 'Why did Nathan enjoy his volunteer work despite receiving little recognition?', 'It paid him well.', 'It helped people become more confident and independent.', 'It gave him more academic awards.', 'It allowed him to travel.', 'b', 'Nathan found satisfaction in seeing his learners become more confident in using technology.'),
+('difficult', 1, 4, 'Why did Nathan question his accomplishments after graduation?', 'He failed his classes.', 'He received only one academic award while others received several.', 'He decided not to attend college.', 'He forgot to attend the ceremony.', 'b', 'Nathan received only one academic award while several classmates earned multiple distinctions.'),
+('difficult', 1, 5, 'What changed Nathan''s perspective about success?', 'Winning another competition', 'Receiving a scholarship', 'Reading thankful messages from the senior citizens he had taught', 'Talking to his classmates', 'c', 'Nathan received heartfelt messages from the people he taught, thanking him for their independence.'),
+('difficult', 1, 6, 'Which statement best expresses the theme of the story?', 'Awards are the only measure of success.', 'Volunteer work is more important than education.', 'True success is measured by the positive impact a person has on others.', 'Academic achievements should always come before helping people.', 'c', 'The story teaches that meaningful success is reflected in the lasting impact on others'' lives.');
+
+-- ============================================
+-- 9. VERIFICATION QUERIES
+-- ============================================
+
 SELECT '✅ Tables created successfully!' as status;
 SELECT table_name FROM information_schema.tables 
 WHERE table_schema = 'public' 
 ORDER BY table_name;
 
--- Check all functions
 SELECT '✅ Functions created successfully!' as status;
 SELECT routine_name FROM information_schema.routines 
 WHERE routine_schema = 'public' 
 AND routine_type = 'FUNCTION'
 ORDER BY routine_name;
 
--- Check all triggers
 SELECT '✅ Triggers created successfully!' as status;
 SELECT trigger_name, event_manipulation, event_object_table 
 FROM information_schema.triggers 
 WHERE trigger_schema = 'public'
 ORDER BY trigger_name;
 
--- Check storage bucket
-SELECT '✅ Storage bucket created!' as status;
-SELECT id, name, public FROM storage.buckets WHERE id = 'stories';
+SELECT '✅ Storage buckets created!' as status;
+SELECT id, name, public, file_size_limit FROM storage.buckets 
+WHERE id IN ('stories', 'avatars');
 
--- Test admin role support
-SELECT '✅ Admin role support added!' as status;
-SELECT 'Role will be set from raw_user_meta_data->>role' as info;
+SELECT '✅ Data inserted!' as status;
+SELECT level_name, COUNT(*) as stories FROM story_metadata GROUP BY level_name;
+SELECT level_name, COUNT(*) as questions FROM quiz_questions GROUP BY level_name;
 
 -- ============================================
 -- END OF SCHEMA

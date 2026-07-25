@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { LEVELS, getNextLevel } from '../../config/levels'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 
@@ -16,38 +17,19 @@ export default function Quiz() {
   const [isAnswered, setIsAnswered] = useState(false)
   const [score, setScore] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [levelData, setLevelData] = useState(null)
   const [quizComplete, setQuizComplete] = useState(false)
 
-  useEffect(() => {
-    const fetchLevelData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('levels')
-          .select('*')
-          .eq('level_name', level)
-          .single()
-        
-        if (error) throw error
-        setLevelData(data)
-      } catch (error) {
-        console.error('Error fetching level:', error)
-        toast.error('Failed to load quiz')
-      }
-    }
-    fetchLevelData()
-  }, [level])
+  // Get current level config
+  const currentLevelConfig = LEVELS.find(l => l.id === level)
 
   useEffect(() => {
     const fetchQuestions = async () => {
-      if (!levelData) return
-
       try {
         setLoading(true)
         const { data, error } = await supabase
           .from('quiz_questions')
           .select('*')
-          .eq('level_id', levelData.id)
+          .eq('level_name', level)
           .order('display_order')
 
         if (error) throw error
@@ -61,7 +43,7 @@ export default function Quiz() {
     }
 
     fetchQuestions()
-  }, [levelData])
+  }, [level])
 
   const handleAnswerSelect = (answer) => {
     if (isAnswered) return
@@ -73,18 +55,17 @@ export default function Quiz() {
 
     const currentQ = questions[currentQuestion]
     const isCorrect = selectedAnswer === currentQ.correct_answer
+    const nextScore = score + (isCorrect ? 1 : 0)
 
     setIsAnswered(true)
-    if (isCorrect) {
-      setScore(prev => prev + 1)
-    }
+    setScore(nextScore)
 
     // Play sound effect
     try {
       const audio = new Audio(
         isCorrect 
-          ? '/assets/audio/effects/correct.mp3' 
-          : '/assets/audio/effects/wrong.mp3'
+          ? '/soundeffects/quiz/right.mp3' 
+          : '/soundeffects/quiz/wrong.mp3'
       )
       audio.play().catch(() => {})
     } catch (e) {}
@@ -98,49 +79,80 @@ export default function Quiz() {
       } else {
         // Quiz complete
         setQuizComplete(true)
-        saveProgress()
+        saveProgress(nextScore)
       }
     }, 1500)
   }
 
-  const saveProgress = async () => {
+  const saveProgress = async (finalScore) => {
     try {
-      const { error } = await supabase
+      if (!user?.id) {
+        throw new Error('Missing user information')
+      }
+
+      // ✅ Step 2: Upsert progress (atomic — no 409 race condition)
+      const { error: upsertError } = await supabase
         .from('user_progress')
-        .upsert({
-          user_id: user.id,
-          level_id: levelData.id,
-          score: score,
-          total_questions: questions.length,
-          correct_answers: score,
-          is_completed: true,
-          completed_at: new Date().toISOString()
-        })
+        .upsert(
+          {
+            user_id: user.id,
+            level_name: level,
+            score: finalScore,
+            total_questions: questions.length,
+            correct_answers: finalScore,
+            is_completed: true,
+            completed_at: new Date().toISOString(),
+            unlocked_at: new Date().toISOString()
+          },
+          { onConflict: 'user_id,level_name' }
+        )
 
-      if (error) throw error
+      if (upsertError) throw upsertError
 
-      // ✅ FIXED: Use backticks for template literal
-      const shouldUnlock = score >= 3
+      // ✅ Step 3: Unlock next level if passed
+      const shouldUnlock = finalScore >= 3
       if (shouldUnlock) {
-        toast.success(`🎉 Level completed! Score: ${score}/${questions.length}`)
+        const nextLevel = getNextLevel(level)
+        
+        if (nextLevel) {
+          // Upsert next level progress (atomic unlock)
+          const { error: unlockError } = await supabase
+            .from('user_progress')
+            .upsert(
+              {
+                user_id: user.id,
+                level_name: nextLevel.id,
+                unlocked_at: new Date().toISOString()
+              },
+              { onConflict: 'user_id,level_name' }
+            )
+
+          if (unlockError) throw unlockError
+        }
+
+        toast.success(`🎉 Level completed! Score: ${finalScore}/${questions.length}`)
       } else {
-        toast.info(`Score: ${score}/${questions.length}. Need 3+ to pass.`)
+        toast.info(`Score: ${finalScore}/${questions.length}. Need 3+ to pass.`)
       }
 
-      // Play level up sound if passed
-      if (shouldUnlock) {
-        try {
-          const audio = new Audio('/assets/audio/effects/level_up.mp3')
-          audio.play().catch(() => {})
-        } catch (e) {}
-      }
-
+      // ✅ Step 4: Navigate to results
       navigate(`/results/${level}`, {
-        state: { score, totalQuestions: questions.length }
+        state: { 
+          score: finalScore, 
+          totalQuestions: questions.length,
+          refresh: true 
+        }
       })
     } catch (error) {
       console.error('Error saving progress:', error)
-      toast.error('Failed to save progress')
+      toast.error('Unable to save progress right now, but you can still view your result.')
+      navigate(`/results/${level}`, {
+        state: { 
+          score: finalScore, 
+          totalQuestions: questions.length,
+          refresh: true 
+        }
+      })
     }
   }
 

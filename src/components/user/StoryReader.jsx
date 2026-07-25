@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
 import { storyService } from '../../services/storyService'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 
 export default function StoryReader() {
   const { level, storyId } = useParams()
-  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [content, setContent] = useState('')
@@ -20,54 +18,50 @@ export default function StoryReader() {
   const [progress, setProgress] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [levelData, setLevelData] = useState(null)
 
   const audioRef = useRef(null)
   const wordRefs = useRef([])
   const containerRef = useRef(null)
-  const animationFrameRef = useRef(null)
 
-  // Load level data
+  const VALID_LEVELS = ['easy', 'average', 'difficult']
+
+  // Validate level locally — no 'levels' table exists in the schema
   useEffect(() => {
-    const fetchLevelData = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('levels')
-          .select('*')
-          .eq('level_name', level)
-          .single()
-        
-        if (error) throw error
-        setLevelData(data)
-      } catch (error) {
-        console.error('Error fetching level:', error)
-      }
+    if (!VALID_LEVELS.includes(level)) {
+      setError(`The "${level}" reading level was not found.`)
+      setIsLoading(false)
     }
-    fetchLevelData()
   }, [level])
 
   // Load story data
   useEffect(() => {
     async function loadStory() {
-      if (!levelData) return
+      if (!VALID_LEVELS.includes(level)) return
 
       try {
         setIsLoading(true)
         setError(null)
 
-        const meta = await storyService.getStoryMetadata(levelData.id, parseInt(storyId))
+        const parsedStoryId = Number.parseInt(storyId, 10)
+        if (!Number.isInteger(parsedStoryId) || parsedStoryId < 1) {
+          throw new Error('The story number is invalid.')
+        }
+
+        const meta = await storyService.getStoryMetadata(level, parsedStoryId)
         setMetadata(meta)
 
-        const text = await storyService.getStoryContent(level, parseInt(storyId))
+        const assetPaths = await storyService.getStoryAssetPaths(level, parsedStoryId, meta || {})
+
+        const text = await storyService.getStoryContent(level, parsedStoryId, assetPaths.filePath)
         setContent(text)
 
-        const timing = await storyService.getStoryTiming(level, parseInt(storyId))
-        setTimingData(timing.timing || timing)
+        const timing = await storyService.getStoryTiming(level, parsedStoryId, assetPaths.jsonPath)
+        setTimingData(getTimingEntries(timing))
 
-        const audio = await storyService.getStoryAudioUrl(level, parseInt(storyId))
+        const audio = await storyService.getStoryAudioUrl(level, parsedStoryId, assetPaths.audioPath)
         setAudioUrl(audio)
 
-        const image = await storyService.getStoryImageUrl(level, parseInt(storyId))
+        const image = await storyService.getStoryImageUrl(level, parsedStoryId, assetPaths.imagePath)
         setImageUrl(image)
 
       } catch (err) {
@@ -79,102 +73,71 @@ export default function StoryReader() {
     }
 
     loadStory()
-  }, [levelData, level, storyId])
+  }, [level, storyId])
 
   // Audio controls
   const togglePlay = useCallback(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause()
-      } else {
-        audioRef.current.play()
-      }
-      setIsPlaying(!isPlaying)
+    const audio = audioRef.current
+    if (!audio) return
+
+    if (audio.paused) {
+      audio.play().catch((err) => {
+        console.error('Unable to play story audio:', err)
+      })
+    } else {
+      audio.pause()
     }
-  }, [isPlaying])
+  }, [])
 
   const restartAudio = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = 0
+    const audio = audioRef.current
+    if (audio) {
+      audio.currentTime = 0
       setCurrentWordIndex(-1)
       setProgress(0)
-      if (!isPlaying) {
-        audioRef.current.play()
-        setIsPlaying(true)
+      if (audio.paused) {
+        audio.play().catch((err) => {
+          console.error('Unable to restart story audio:', err)
+        })
       }
     }
-  }, [isPlaying])
+  }, [])
 
-  // Word highlighting sync
-  useEffect(() => {
-    if (!audioRef.current || !timingData.length) return
+  const handleAudioTimeUpdate = useCallback((event) => {
+    const audio = event.currentTarget
+    const currentTime = audio.currentTime
+    const foundIndex = timingData.findIndex(({ start, end }) =>
+      Number.isFinite(start) && Number.isFinite(end) && currentTime >= start && currentTime < end
+    )
 
-    const audio = audioRef.current
+    setCurrentWordIndex(foundIndex)
 
-    const updateHighlight = () => {
-      const currentTime = audio.currentTime
+    const timingDuration = timingData.reduce(
+      (latestEnd, { end }) => Number.isFinite(end) ? Math.max(latestEnd, end) : latestEnd,
+      0
+    )
+    const totalDuration = Number.isFinite(audio.duration) && audio.duration > 0
+      ? audio.duration
+      : timingDuration
+    setProgress(totalDuration ? (currentTime / totalDuration) * 100 : 0)
 
-      let foundIndex = -1
-      for (let i = 0; i < timingData.length; i++) {
-        const word = timingData[i]
-        if (currentTime >= word.start && currentTime < word.end) {
-          foundIndex = i
-          break
-        }
-      }
-
-      setCurrentWordIndex(foundIndex)
-
-      const totalDuration = audio.duration || timingData[timingData.length - 1]?.end || 1
-      setProgress((currentTime / totalDuration) * 100)
-
-      if (foundIndex >= 0 && wordRefs.current[foundIndex]) {
-        const wordElement = wordRefs.current[foundIndex]
-        const container = containerRef.current
-        if (container) {
-          const wordRect = wordElement.getBoundingClientRect()
-          const containerRect = container.getBoundingClientRect()
-          
-          if (wordRect.top < containerRect.top || wordRect.bottom > containerRect.bottom) {
-            wordElement.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
-            })
-          }
-        }
-      }
-
-      animationFrameRef.current = requestAnimationFrame(updateHighlight)
-    }
-
-    animationFrameRef.current = requestAnimationFrame(updateHighlight)
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
+    const wordElement = foundIndex >= 0 ? wordRefs.current[foundIndex] : null
+    const container = containerRef.current
+    if (wordElement && container) {
+      const wordRect = wordElement.getBoundingClientRect()
+      const containerRect = container.getBoundingClientRect()
+      if (wordRect.top < containerRect.top || wordRect.bottom > containerRect.bottom) {
+        wordElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
     }
   }, [timingData])
 
-  // Auto-advance on completion
-  useEffect(() => {
-    if (!audioRef.current) return
-
-    const audio = audioRef.current
-
-    const handleEnded = () => {
-      setIsPlaying(false)
-      setProgress(100)
-      setTimeout(() => {
-        navigate(`/quiz/${level}`)
-      }, 2000)
-    }
-
-    audio.addEventListener('ended', handleEnded)
-
-    return () => {
-      audio.removeEventListener('ended', handleEnded)
-    }
+  const handleAudioEnded = useCallback(() => {
+    setIsPlaying(false)
+    setProgress(100)
+    setTimeout(() => {
+      navigate(`/quiz/${level}`)
+    }, 2000)
   }, [navigate, level])
 
   // Keyboard shortcuts
@@ -192,14 +155,14 @@ export default function StoryReader() {
 
   // Render content with highlighting
   const renderContentWithHighlight = useCallback(() => {
-    if (!content || !timingData.length) return null
+    if (!content) return null
 
     const paragraphs = content.split('\n\n')
     let wordCounter = 0
 
     return paragraphs.map((paragraph, pIndex) => (
       <p key={pIndex} className="mb-4 leading-relaxed text-lg">
-        {paragraph.split(' ').map((word, wIndex) => {
+        {paragraph.split(' ').map((word) => {
           const currentIndex = wordCounter
           const isActive = currentIndex === currentWordIndex
           const isPast = currentIndex < currentWordIndex
@@ -229,7 +192,7 @@ export default function StoryReader() {
         })}
       </p>
     ))
-  }, [content, timingData, currentWordIndex])
+  }, [content, currentWordIndex])
 
   if (isLoading) {
     return (
@@ -298,6 +261,10 @@ export default function StoryReader() {
           src={audioUrl}
           className="hidden"
           preload="auto"
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onTimeUpdate={handleAudioTimeUpdate}
+          onEnded={handleAudioEnded}
         />
         
         <div className="flex items-center gap-4">
@@ -398,4 +365,11 @@ function formatTime(seconds) {
   const mins = Math.floor(seconds / 60)
   const secs = Math.floor(seconds % 60)
   return `${mins}:${secs.toString().padStart(2, '0')}`
+}
+
+function getTimingEntries(timing) {
+  if (Array.isArray(timing)) return timing
+
+  const entries = timing?.karaoke || timing?.timing || timing?.words
+  return Array.isArray(entries) ? entries : []
 }

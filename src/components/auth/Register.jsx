@@ -85,6 +85,13 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream p-4">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm text-gray-500 hover:text-dark transition-colors mb-6 group"
+        >
+          <span className="mr-1 transition-transform group-hover:-translate-x-1">←</span>
+          Back to Home
+        </Link>
         <div className="text-center mb-8">
           <img 
             src="/assets/images/icons/logo.png" 

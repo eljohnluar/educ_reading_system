@@ -1,54 +1,56 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
+import { LEVELS, isLevelUnlocked } from '../../config/levels'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 
 export default function Dashboard() {
-  const { user, profile } = useAuth()
-  const [levels, setLevels] = useState([])
+  const { user, profile, isAdmin } = useAuth()
   const [progress, setProgress] = useState({})
-  const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchDashboardData()
   }, [user])
 
+  // Redirect admin to admin dashboard
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />
+  }
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
 
-      // Fetch levels
-      const { data: levelsData, error: levelsError } = await supabase
-        .from('levels')
-        .select('*')
-        .order('display_order', { ascending: true })
-
-      if (levelsError) throw levelsError
-      setLevels(levelsData || [])
-
-      // Fetch user progress
       if (user) {
+        // Fetch user progress using the new simplified RPC
         const { data: progressData, error: progressError } = await supabase
-          .rpc('get_user_progress_summary', { user_id_param: user.id })
+          .rpc('get_user_progress_summary', { p_user_id: user.id })
 
         if (progressError) throw progressError
 
-        // Create progress map
+        // Create progress map keyed by level_name
         const progressMap = {}
         progressData?.forEach(item => {
-          progressMap[item.level_id] = item
+          progressMap[item.level_name] = item
         })
         setProgress(progressMap)
 
         // Fetch user stats
         const { data: statsData, error: statsError } = await supabase
-          .rpc('get_user_stats', { user_id_param: user.id })
+          .rpc('get_user_stats', { p_user_id: user.id })
 
         if (statsError) throw statsError
-        setStats(statsData)
+        
+        // Handle the new stats format (single row)
+        if (statsData && Array.isArray(statsData) && statsData.length > 0) {
+          setStats(statsData[0])
+        } else {
+          setStats(statsData)
+        }
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -61,16 +63,19 @@ export default function Dashboard() {
   const getLevelStatus = (level) => {
     const p = progress[level.id]
     
-    if (p && p.is_completed) {
+    // Check if completed first
+    if (p?.is_completed) {
       if (p.score >= 3) {
         return { status: 'completed', label: '🏆 Completed', color: 'bg-green-500' }
       }
       return { status: 'failed', label: '❌ Failed', color: 'bg-red-500' }
     }
 
-    const totalScore = stats?.total_score || 0
-    if ((p && p.unlocked_at) || level.unlock_requirement <= totalScore || level.display_order === 1) {
-      return { status: 'in_progress', label: '🔄 In Progress', color: 'bg-yellow-500' }
+    // Check if level is unlocked
+    const unlocked = isLevelUnlocked(level.id, progress)
+
+    if (unlocked || level.id === 'easy') {
+      return { status: 'in_progress', label: '🔄 Ready to Start', color: 'bg-yellow-500' }
     }
 
     return { status: 'locked', label: '🔒 Locked', color: 'bg-gray-200' }
@@ -84,8 +89,8 @@ export default function Dashboard() {
     )
   }
 
-  const completedCount = levels.filter(l => progress[l.id]?.is_completed).length
-  const totalLevels = levels.length
+  const completedCount = LEVELS.filter(l => progress[l.id]?.is_completed).length
+  const totalLevels = LEVELS.length
 
   return (
     <div className="space-y-6">
@@ -124,7 +129,7 @@ export default function Dashboard() {
       {/* Levels Section */}
       <h2 className="text-2xl font-bold text-dark">Your Learning Path</h2>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {levels.map((level, index) => {
+        {LEVELS.map((level, index) => {
           const status = getLevelStatus(level)
           const isUnlocked = status.status !== 'locked'
           const isCompleted = status.status === 'completed'
@@ -139,7 +144,10 @@ export default function Dashboard() {
                 !isUnlocked ? 'opacity-75' : ''
               }`}
             >
-              <div className={`h-2 ${status.color}`}></div>
+              <div 
+                className="h-2" 
+                style={{ backgroundColor: level.colorCode }}
+              ></div>
               <div className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-4xl">{level.icon}</span>
@@ -152,7 +160,7 @@ export default function Dashboard() {
                     {status.label}
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-dark capitalize">{level.level_name}</h3>
+                <h3 className="text-xl font-bold text-dark capitalize">{level.name}</h3>
                 <p className="text-sm text-gray-500 mt-1">{level.description}</p>
 
                 {isCompleted && progress[level.id] && (
@@ -165,16 +173,29 @@ export default function Dashboard() {
                 )}
 
                 {isUnlocked ? (
-                  <Link
-                    to={isCompleted ? `/results/${level.level_name}` : `/story/${level.level_name}/1`}
-                    className={`mt-4 inline-block w-full text-center py-2 rounded-lg font-semibold transition-all ${
-                      isCompleted
-                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                        : 'bg-gold hover:bg-amber-500 text-white shadow-md hover:shadow-lg'
-                    }`}
-                  >
-                    {isCompleted ? '📊 View Results' : '📖 Start Reading'}
-                  </Link>
+                  isCompleted ? (
+                    <div className="mt-4 space-y-2">
+                      <Link
+                        to={`/results/${level.id}`}
+                        className="block w-full text-center py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
+                      >
+                        📊 View Results
+                      </Link>
+                      <Link
+                        to={`/story/${level.id}/1`}
+                        className="block w-full text-center py-2 bg-cream text-dark border-2 border-transparent hover:border-gold rounded-lg font-semibold hover:bg-gold hover:text-white transition-all"
+                      >
+                        📖 Read Story Again
+                      </Link>
+                    </div>
+                  ) : (
+                    <Link
+                      to={`/story/${level.id}/1`}
+                      className="mt-4 block w-full text-center py-2 bg-gold hover:bg-amber-500 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
+                    >
+                      📖 Start Reading
+                    </Link>
+                  )
                 ) : (
                   <button
                     disabled

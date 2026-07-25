@@ -13,56 +13,61 @@ export default function Results() {
 
   const [score, setScore] = useState(0)
   const [totalQuestions, setTotalQuestions] = useState(6)
-  const [levelData, setLevelData] = useState(null)
   const [progress, setProgress] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get score from location state or fetch from database
-    if (location.state) {
-      setScore(location.state.score || 0)
+    // If score was passed from Quiz via navigation state, use it directly
+    if (location.state?.score !== undefined) {
+      setScore(location.state.score)
       setTotalQuestions(location.state.totalQuestions || 6)
       setLoading(false)
-    } else {
-      fetchResults()
+      return
     }
-  }, [location])
+
+    // Otherwise fetch from DB (e.g. when navigating directly to /results/:level)
+    if (user?.id && level) {
+      fetchResults()
+    } else {
+      setLoading(false)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, level])
 
   useEffect(() => {
-    const fetchLevelData = async () => {
+    if (!loading && totalQuestions > 0) {
       try {
-        const { data, error } = await supabase
-          .from('levels')
-          .select('*')
-          .eq('level_name', level)
-          .single()
-        
-        if (error) throw error
-        setLevelData(data)
-      } catch (error) {
-        console.error('Error fetching level:', error)
-      }
+        const isPassed = score >= 3
+        const audio = new Audio(
+          isPassed 
+            ? '/soundeffects/scoreresult/pass.mp3'
+            : '/soundeffects/scoreresult/fail.mp3'
+        )
+        audio.play().catch(() => {})
+      } catch (e) {}
     }
-    fetchLevelData()
-  }, [level])
+  }, [loading, score, totalQuestions])
 
   const fetchResults = async () => {
     try {
       setLoading(true)
+
       const { data, error } = await supabase
         .from('user_progress')
         .select('*')
         .eq('user_id', user.id)
-        .eq('level_id', levelData?.id)
-        .single()
+        .eq('level_name', level)
+        .maybeSingle()
 
       if (error) throw error
-      setProgress(data)
-      setScore(data.score || 0)
-      setTotalQuestions(data.total_questions || 6)
+
+      if (data) {
+        setProgress(data)
+        setScore(data.score || 0)
+        setTotalQuestions(data.total_questions || 6)
+      }
     } catch (error) {
       console.error('Error fetching results:', error)
-      toast.error('Failed to load results')
     } finally {
       setLoading(false)
     }
@@ -140,6 +145,13 @@ export default function Results() {
             className="w-full py-3 bg-cream text-dark rounded-lg font-semibold hover:bg-gold hover:text-white transition-all"
           >
             🔄 Retry Quiz
+          </button>
+
+          <button
+            onClick={() => navigate(`/story/${level}/1`)}
+            className="w-full py-3 bg-blue-100 text-blue-700 rounded-lg font-semibold hover:bg-blue-200 transition-all"
+          >
+            📖 Read Story Again
           </button>
 
           {isPassed && (

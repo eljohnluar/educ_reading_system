@@ -23,20 +23,22 @@ export default function Statistics() {
       setStats(statsData)
 
       // Level statistics
-      const { data: levelData, error: levelError } = await supabase
-        .from('levels')
-        .select(`
-          id,
-          level_name,
-          icon,
-          color_code,
-          user_progress (count, score)
-        `)
-        .order('display_order')
-
-      if (!levelError) {
-        setLevelStats(levelData || [])
-      }
+      const baseLevels = [
+        { id: 'easy', level_name: 'easy', icon: '🌱', color_code: '#4CAF50' },
+        { id: 'average', level_name: 'average', icon: '⭐', color_code: '#FFC107' },
+        { id: 'difficult', level_name: 'difficult', icon: '🔥', color_code: '#F44336' }
+      ]
+      
+      const { data: progressData } = await supabase.from('user_progress').select('level_name, is_completed, score')
+      
+      const levelStatsData = baseLevels.map(level => {
+        const pData = (progressData || []).filter(p => p.level_name === level.level_name)
+        return {
+          ...level,
+          user_progress: pData
+        }
+      })
+      setLevelStats(levelStatsData)
 
       // User growth (last 7 days)
       const { data: growthData, error: growthError } = await supabase
@@ -192,10 +194,7 @@ export default function Statistics() {
           <p className="text-2xl font-bold text-blue-500">{stats?.user_count || 0}</p>
           <p className="text-sm text-gray-500">Regular Users</p>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6 text-center">
-          <p className="text-2xl font-bold text-green-500">{stats?.today_feedback || 0}</p>
-          <p className="text-sm text-gray-500">Today's Feedback</p>
-        </div>
+
       </div>
     </div>
   )

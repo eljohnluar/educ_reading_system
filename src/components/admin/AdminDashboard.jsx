@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { adminService } from '../../services/adminService'
+import { supabase } from '../../lib/supabase'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
@@ -54,6 +55,7 @@ export default function AdminDashboard() {
     )
   }
 
+  // ✅ Fixed: Complete statCards array
   const statCards = [
     { 
       label: 'Total Users', 
@@ -84,13 +86,8 @@ export default function AdminDashboard() {
       value: stats?.today_logins || 0, 
       icon: '🔑', 
       color: 'bg-indigo-100 text-indigo-600' 
-    },
-    { 
-      label: 'Today\'s Feedback', 
-      value: stats?.today_feedback || 0, 
-      icon: '💬', 
-      color: 'bg-pink-100 text-pink-600' 
-    },
+    }
+    // ✅ Added closing bracket
   ]
 
   return (
@@ -111,7 +108,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.label}
@@ -212,27 +209,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
         <Link
           to="/admin/users"
           className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-all hover:bg-cream"
         >
           <div className="text-3xl mb-2">👥</div>
           <p className="text-sm font-medium text-dark">Manage Users</p>
-        </Link>
-        <Link
-          to="/admin/levels"
-          className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-all hover:bg-cream"
-        >
-          <div className="text-3xl mb-2">📚</div>
-          <p className="text-sm font-medium text-dark">Manage Levels</p>
-        </Link>
-        <Link
-          to="/admin/feedback"
-          className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-all hover:bg-cream"
-        >
-          <div className="text-3xl mb-2">💬</div>
-          <p className="text-sm font-medium text-dark">View Feedback</p>
         </Link>
         <Link
           to="/admin/statistics"

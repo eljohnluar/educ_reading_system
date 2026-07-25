@@ -13,8 +13,6 @@ const userLinks = [
 const adminLinks = [
   { to: '/admin', label: 'Admin Dashboard', icon: '⚙️' },
   { to: '/admin/users', label: 'Users', icon: '👥' },
-  { to: '/admin/levels', label: 'Levels', icon: '📚' },
-  { to: '/admin/feedback', label: 'Feedback', icon: '💬' },
   { to: '/admin/statistics', label: 'Statistics', icon: '📈' },
   { to: '/admin/activity', label: 'Activity Log', icon: '📋' },
 ]

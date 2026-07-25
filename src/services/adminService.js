@@ -7,7 +7,7 @@ export const adminService = {
       .rpc('get_dashboard_stats')
     
     if (error) throw error
-    return data
+    return Array.isArray(data) && data.length > 0 ? data[0] : (data || {})
   },
 
   // Get all users
@@ -47,23 +47,11 @@ export const adminService = {
     return data
   },
 
-  // Get all feedback
-  async getFeedback(limit = 50) {
-    const { data, error } = await supabase
-      .from('feedback')
-      .select('*, profiles(username, email), levels(level_name)')
-      .order('created_at', { ascending: false })
-      .limit(limit)
-    
-    if (error) throw error
-    return data
-  },
-
   // Get user progress for admin
   async getUserProgress(userId) {
     const { data, error } = await supabase
       .from('user_progress')
-      .select('*, levels(level_name)')
+      .select('*, profiles(username)')
       .eq('user_id', userId)
       .order('completed_at', { ascending: false })
     
@@ -84,20 +72,7 @@ export const adminService = {
     return data
   },
 
-  // Get all levels with stats
-  async getLevelsWithStats() {
-    const { data, error } = await supabase
-      .from('levels')
-      .select(`
-        *,
-        user_progress(count),
-        story_metadata(count)
-      `)
-      .order('display_order')
-    
-    if (error) throw error
-    return data
-  },
+
 
   // Get user count
   async getUserCount() {

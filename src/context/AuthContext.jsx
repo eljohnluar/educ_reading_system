@@ -42,10 +42,39 @@ export function AuthProvider({ children }) {
       .from('profiles')
       .select('*')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
 
     if (!error && data) {
       setProfile(data)
+      return
+    }
+
+    // No profile row found — the signup trigger may have failed.
+    // Get the auth user and INSERT a real profile row so FK constraints work.
+    const { data: { user: authUser } } = await supabase.auth.getUser()
+    if (!authUser) return
+
+    const newProfile = {
+      id: authUser.id,
+      email: authUser.email,
+      username: authUser.user_metadata?.username || authUser.email.split('@')[0],
+      avatar_url: authUser.user_metadata?.avatar_url || 'default-avatar.png',
+      privacy_agreed: authUser.user_metadata?.privacy_agreed || false,
+      role: authUser.user_metadata?.role || 'user',
+    }
+
+    const { data: inserted, error: insertError } = await supabase
+      .from('profiles')
+      .insert(newProfile)
+      .select()
+      .maybeSingle()
+
+    if (!insertError && inserted) {
+      setProfile(inserted)
+    } else {
+      // Insert failed (e.g. RLS or duplicate) — still set in-memory so UI doesn't hang
+      console.warn('Could not create profile row:', insertError)
+      setProfile({ ...newProfile, created_at: authUser.created_at })
     }
   }
 
@@ -84,10 +113,10 @@ export function AuthProvider({ children }) {
       .update(updates)
       .eq('id', user.id)
       .select()
-      .single()
+      .maybeSingle()
 
     if (error) throw error
-    setProfile(data)
+    if (data) setProfile(data)
     return data
   }
 
