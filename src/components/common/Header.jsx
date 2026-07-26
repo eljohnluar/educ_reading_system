@@ -1,11 +1,10 @@
-// src/components/common/Header.jsx
-
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
+import { LogOut, Menu } from 'lucide-react'
 
-export default function Header() {
+export default function Header({ onMenuToggle }) {
   const navigate = useNavigate()
   const { user, profile, isAdmin, signOut } = useAuth()
 
@@ -23,9 +22,18 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#1A2634]/90 backdrop-blur-xl border-b border-white/10">
       <div className="flex items-center justify-between px-6 py-3.5">
         <div className="flex items-center space-x-3">
+          {/* Mobile Hamburguer Menu */}
+          <button
+            onClick={onMenuToggle}
+            className="md:hidden p-1.5 -ml-1 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors focus:outline-none"
+            aria-label="Toggle menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
           <Link to={isAdmin ? "/admin" : "/dashboard"} className="flex items-center space-x-2.5">
             <img 
-              src="/assets/images/icons/logo.png" 
+              src="/assets/images/icons/logo.svg" 
               alt="Read Well" 
               className="h-8 w-8"
               onError={(e) => {
@@ -36,17 +44,12 @@ export default function Header() {
               Read Well <span className="text-[#E9D2A9] font-medium">English Zone</span>
             </h1>
           </Link>
-          {isAdmin && (
-            <span className="text-[11px] bg-[#E9D2A9]/20 text-[#E9D2A9] border border-[#E9D2A9]/40 px-2.5 py-0.5 rounded-full font-semibold tracking-wide">
-              Admin
-            </span>
-          )}
         </div>
 
         <div className="flex items-center space-x-4">
           {user && (
             <>
-              {/* Only show profile link for regular users */}
+              {/* Only show profile avatar for regular users */}
               {!isAdmin && (
                 <Link to="/profile" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
                   <img 
@@ -57,25 +60,14 @@ export default function Header() {
                       e.target.src = '/assets/images/avatars/default.jpg'
                     }}
                   />
-                  <span className="text-xs text-gray-200 font-medium hidden md:block">
-                    {profile?.username || user.email}
-                  </span>
                 </Link>
-              )}
-              
-              {/* Show admin label in header */}
-              {isAdmin && (
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs font-medium text-gray-300 hidden md:block">
-                    {profile?.username || 'Admin'}
-                  </span>
-                </div>
               )}
               
               <button
                 onClick={handleLogout}
-                className="text-xs font-medium text-gray-300 hover:text-[#E9D2A9] transition-colors px-2 py-1"
+                className="flex items-center gap-1.5 text-xs font-medium text-gray-300 hover:text-white bg-white/10 hover:bg-red-500/80 border border-white/20 hover:border-red-400 rounded-lg px-3 py-1.5 transition-all duration-200"
               >
+                <LogOut className="w-3.5 h-3.5" />
                 Logout
               </button>
             </>

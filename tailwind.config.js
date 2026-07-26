@@ -20,7 +20,7 @@ export default {
         'success': '#27AE60',
         'error': '#E74C3C',
         'warning': '#F39C12',
-        'info': '#3498DB',
+        'info': '#a2aeb6',
       }
     },
   },

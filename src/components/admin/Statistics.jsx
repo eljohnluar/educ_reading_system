@@ -3,6 +3,7 @@ import { adminService } from '../../services/adminService'
 import { supabase } from '../../lib/supabase'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
+import { Users, CheckCircle, Target, Star, Award, LogIn, Leaf, Gauge, Flame } from 'lucide-react'
 
 export default function Statistics() {
   const [stats, setStats] = useState(null)
@@ -24,9 +25,9 @@ export default function Statistics() {
 
       // Level statistics
       const baseLevels = [
-        { id: 'easy', level_name: 'easy', icon: '🌱', color_code: '#4CAF50' },
-        { id: 'average', level_name: 'average', icon: '⭐', color_code: '#FFC107' },
-        { id: 'difficult', level_name: 'difficult', icon: '🔥', color_code: '#F44336' }
+        { id: 'easy', level_name: 'easy', IconComponent: Leaf, color_code: '#4CAF50' },
+        { id: 'average', level_name: 'average', IconComponent: Gauge, color_code: '#FFC107' },
+        { id: 'difficult', level_name: 'difficult', IconComponent: Flame, color_code: '#F44336' }
       ]
       
       const { data: progressData } = await supabase.from('user_progress').select('level_name, is_completed, score')
@@ -72,12 +73,12 @@ export default function Statistics() {
   }
 
   const statCards = [
-    { label: 'Total Users', value: stats?.total_users || 0, icon: '' },
-    { label: 'Total Completions', value: stats?.total_completions || 0, icon: '' },
-    { label: 'Average Score', value: stats?.avg_score || 0, icon: '' },
-    { label: 'Perfect Scores', value: stats?.perfect_scores || 0, icon: '' },
-    { label: 'Passing Scores', value: stats?.passing_scores || 0, icon: '' },
-    { label: 'Today\'s Logins', value: stats?.today_logins || 0, icon: '' },
+    { label: 'Total Users', value: stats?.total_users || 0, IconComponent: Users, color: '#6366f1' },
+    { label: 'Total Completions', value: stats?.total_completions || 0, IconComponent: CheckCircle, color: '#22c55e' },
+    { label: 'Average Score', value: stats?.avg_score || 0, IconComponent: Target, color: '#f59e0b' },
+    { label: 'Perfect Scores', value: stats?.perfect_scores || 0, IconComponent: Star, color: '#eab308' },
+    { label: 'Passing Scores', value: stats?.passing_scores || 0, IconComponent: Award, color: '#8b5cf6' },
+    { label: 'Today\'s Logins', value: stats?.today_logins || 0, IconComponent: LogIn, color: '#3b82f6' },
   ]
 
   return (
@@ -102,7 +103,9 @@ export default function Statistics() {
             transition={{ delay: index * 0.05 }}
             className="bg-white rounded-xl shadow-md p-4 text-center hover:shadow-lg transition-all"
           >
-            <div className="text-3xl mb-2">{stat.icon}</div>
+            <div className="flex justify-center mb-2">
+              <stat.IconComponent className="w-7 h-7" style={{ color: stat.color }} />
+            </div>
             <p className="text-2xl font-bold text-dark">{stat.value}</p>
             <p className="text-xs text-gray-500">{stat.label}</p>
           </motion.div>
@@ -129,7 +132,7 @@ export default function Statistics() {
                   <div key={level.id} className="border-b border-gray-100 pb-3 last:border-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="text-xl">{level.icon || ''}</span>
+                        {level.IconComponent && <level.IconComponent className="w-5 h-5" style={{ color: level.color_code }} />}
                         <span className="font-medium text-dark capitalize">{level.level_name}</span>
                       </div>
                       <div className="flex items-center space-x-4 text-sm">

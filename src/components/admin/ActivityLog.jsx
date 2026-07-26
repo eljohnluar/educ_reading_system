@@ -45,19 +45,19 @@ export default function ActivityLog() {
 
   const getActionColor = (actionType) => {
     const colors = {
-      'login': 'text-blue-500',
-      'logout': 'text-gray-500',
-      'register': 'text-green-500',
-      'verify': 'text-purple-500',
-      'reset': 'text-yellow-500',
-      'profile_update': 'text-indigo-500',
-      'quiz_start': 'text-orange-500',
-      'quiz_complete': 'text-green-500',
-      'level_start': 'text-cyan-500',
-      'level_complete': 'text-gold',
-      'story_read': 'text-pink-500'
+      'login': 'text-blue-700 bg-blue-100',
+      'logout': 'text-blue-700 bg-blue-100',
+      'register': 'text-green-700 bg-green-100',
+      'verify': 'text-purple-700 bg-purple-100',
+      'reset': 'text-yellow-700 bg-yellow-100',
+      'profile_update': 'text-indigo-700 bg-indigo-100',
+      'quiz_start': 'text-orange-700 bg-orange-100',
+      'quiz_complete': 'text-emerald-700 bg-emerald-100',
+      'level_start': 'text-cyan-700 bg-cyan-100',
+      'level_complete': 'text-amber-700 bg-amber-100',
+      'story_read': 'text-pink-700 bg-pink-100'
     }
-    return colors[actionType] || 'text-gray-500'
+    return colors[actionType] || 'text-gray-700 bg-gray-100'
   }
 
   const filteredActivities = activities.filter(activity => {
@@ -166,7 +166,7 @@ export default function ActivityLog() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${getActionColor(activity.action_type)} bg-gray-100`}>
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${getActionColor(activity.action_type)}`}>
                         {(activity.action_type || 'unknown').replace('_', ' ')}
                       </span>
                     </td>

@@ -68,14 +68,13 @@ export default function UserManagement() {
 
     try {
       const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId)
+        .rpc('delete_user_by_admin', { p_user_id: userId })
       
       if (error) throw error
       toast.success('User deleted successfully')
       fetchUsers()
     } catch (error) {
+      console.error('Error deleting user:', error)
       toast.error('Failed to delete user')
     }
   }
@@ -91,10 +90,10 @@ export default function UserManagement() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold text-white drop-shadow-sm flex items-center gap-2">
-          <Users className="w-8 h-8 text-[#E9D2A9]" /> User Management
+        <h1 className="text-3xl font-extrabold text-dark flex items-center gap-2">
+          <Users className="w-8 h-8 text-[#C8A970]" /> User Management
         </h1>
-        <span className="text-xs font-semibold bg-[#E9D2A9]/20 text-[#E9D2A9] border border-[#E9D2A9]/40 px-3 py-1 rounded-full">
+        <span className="text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1 rounded-full">
           {users.length} total users
         </span>
       </div>

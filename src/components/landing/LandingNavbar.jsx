@@ -32,7 +32,7 @@ export default function LandingNavbar() {
         }}
       >
         <img
-          src="/assets/images/icons/logo.png"
+          src="/assets/images/icons/logo.svg"
           alt="Read Well"
           style={{ height: '36px', width: '36px' }}
           onError={(e) => {

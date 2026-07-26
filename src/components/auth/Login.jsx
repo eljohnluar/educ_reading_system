@@ -83,7 +83,7 @@ export default function Login() {
         </Link>
         <div className="text-center mb-8">
           <img 
-            src="/assets/images/icons/logo.png" 
+            src="/assets/images/icons/logo.svg" 
             alt="Read Well English Zone" 
             className="h-16 mx-auto mb-4"
             onError={(e) => {

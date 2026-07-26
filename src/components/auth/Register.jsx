@@ -81,7 +81,6 @@ export default function Register() {
       setLoading(false)
     }
   }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-4">
       <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-8 max-w-md w-full my-8">
@@ -94,7 +93,7 @@ export default function Register() {
         </Link>
         <div className="text-center mb-8">
           <img 
-            src="/assets/images/icons/logo.png" 
+            src="/assets/images/icons/logo.svg" 
             alt="Read Well English Zone" 
             className="h-16 mx-auto mb-4"
             onError={(e) => {
