@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 export default function ResetPassword() {
@@ -7,9 +8,11 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { updatePassword } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (loading) return
     setLoading(true)
 
     if (password !== confirmPassword) {
@@ -24,19 +27,16 @@ export default function ResetPassword() {
       return
     }
 
-    // TODO: Implement password reset when feature is ready
-    toast.info('Password reset feature is currently under development. Please check back soon.')
-    
-    // Placeholder - will be implemented in future
-    // try {
-    //   await supabase.auth.updateUser({ password })
-    //   toast.success('Password reset successfully!')
-    //   navigate('/login')
-    // } catch (error) {
-    //   toast.error(error.message || 'Failed to reset password')
-    // }
-    
-    setLoading(false)
+    try {
+      await updatePassword(password)
+      toast.success('Password reset successfully! You can now log in with your new password.')
+      navigate('/login')
+    } catch (error) {
+      console.error('Password update error:', error)
+      toast.error(error.message || 'Failed to reset password')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -75,12 +75,6 @@ export default function ResetPassword() {
               placeholder="Confirm your password"
               required
             />
-          </div>
-
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-sm text-yellow-700">
-              🚧 This feature is currently under development. It will be available in a future update.
-            </p>
           </div>
 
           <button

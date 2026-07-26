@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
+import '../landing/LandingPage.css' // Needed for the floating-book animations
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -82,8 +83,20 @@ export default function Register() {
     }
   }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-4">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-8 max-w-md w-full my-8">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #2C3E50 0%, #3d566e 40%, #E9D2A9 100%)'
+      }}
+    >
+      {/* Floating decorative elements matching Login page */}
+      <span className="floating-book">📚</span>
+      <span className="floating-book">📖</span>
+      <span className="floating-book">✏️</span>
+      <span className="floating-book">🎓</span>
+      <span className="floating-book">📕</span>
+
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full border border-white/20 relative z-10 my-8">
         <Link
           to="/"
           className="inline-flex items-center text-sm text-gray-500 hover:text-dark transition-colors mb-6 group"
@@ -173,7 +186,7 @@ export default function Register() {
           </div>
 
           {/* Toggle Admin Registration */}
-          <div className="text-center">
+          <div className="text-center pt-2">
             <button
               type="button"
               onClick={() => setShowAdminField(!showAdminField)}
@@ -207,7 +220,7 @@ export default function Register() {
           )}
 
           {/* Privacy Policy */}
-          <div className="flex items-start">
+          <div className="flex items-start pt-2">
             <input
               type="checkbox"
               name="privacyAgreed"
@@ -227,7 +240,7 @@ export default function Register() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 rounded-lg font-semibold text-white transition-all ${
+            className={`w-full py-3 rounded-lg font-semibold text-white transition-all mt-4 ${
               loading 
                 ? 'bg-gray-400 cursor-not-allowed' 
                 : 'bg-gold hover:bg-amber-500 shadow-lg hover:shadow-xl'

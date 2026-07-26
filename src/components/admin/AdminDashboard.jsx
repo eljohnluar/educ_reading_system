@@ -102,7 +102,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((stat) => (
           <div
             key={stat.label}
@@ -230,7 +230,7 @@ export default function AdminDashboard() {
       {/* Quick Actions Panel */}
       <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
         <h3 className="text-sm font-bold text-gray-900 mb-4">Quick Management Links</h3>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link
             to="/admin/users"
             className="flex items-center justify-between p-4 bg-gray-50 hover:bg-[#E9D8A9]/10 border border-transparent hover:border-[#E9D8A9]/40 rounded-xl transition-all duration-200 active:scale-[0.99] group"

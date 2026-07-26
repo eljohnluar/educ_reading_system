@@ -144,7 +144,7 @@ export default function Profile() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-white rounded-xl shadow-md p-6"
       >
-        <div className="flex items-start space-x-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
           <div className="flex-shrink-0">
             <img
               src={(isEditing ? formData.avatar_url : profile.avatar_url) || '/assets/images/avatars/default.jpg'}
@@ -156,8 +156,8 @@ export default function Profile() {
             />
           </div>
           <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:justify-between">
+              <div className="text-center sm:text-left">
                 <h2 className="text-2xl font-bold text-dark">{profile.username}</h2>
                 <p className="text-gray-500">{profile.email}</p>
                 <p className="text-sm text-gray-400 mt-1">

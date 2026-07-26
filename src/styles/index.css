@@ -2,40 +2,436 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom global styles */
-body {
-  @apply bg-cream text-dark antialiased;
+/* ============================================
+   GLOBAL STYLES - Minimalist & Child-Friendly
+   ============================================ */
+
+:root {
+  --cream: #E5DCCD;
+  --gold: #E9D2A9;
+  --white: #FFFFFF;
+  --text-dark: #2C3E50;
+  --text-medium: #5D4E37;
+  --text-light: #7F8C8D;
+  --success: #8BC34A;
+  --error: #E74C3C;
+  --warning: #F39C12;
+  --info: #3498DB;
 }
 
-/* Custom scrollbar */
+/* ----- Base ----- */
+body {
+  @apply bg-cream text-dark antialiased;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+/* ----- Typography ----- */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-bold text-dark;
+}
+
+h1 {
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+p {
+  color: var(--text-medium);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ----- Scrollbar - Clean & Subtle ----- */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-200 rounded-full;
+  @apply bg-cream rounded-full;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gold rounded-full hover:bg-amber-400;
+  @apply bg-gold rounded-full;
 }
 
-/* Smooth transitions */
+/* ----- Transitions - Minimal ----- */
 * {
-  @apply transition-colors duration-200;
+  transition: none;
 }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  @apply font-bold;
+/* ----- Utility Classes ----- */
+.text-gold {
+  color: var(--gold);
 }
 
-/* Card hover effects */
-.hover-scale {
-  @apply transition-transform duration-300 hover:scale-105;
+.text-dark {
+  color: var(--text-dark);
 }
 
-/* Glassmorphism */
+.text-medium {
+  color: var(--text-medium);
+}
+
+.text-light {
+  color: var(--text-light);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-error {
+  color: var(--error);
+}
+
+.text-warning {
+  color: var(--warning);
+}
+
+.text-info {
+  color: var(--info);
+}
+
+.bg-cream {
+  background-color: var(--cream);
+}
+
+.bg-gold {
+  background-color: var(--gold);
+}
+
+.bg-white {
+  background-color: var(--white);
+}
+
+.bg-success {
+  background-color: var(--success);
+}
+
+.bg-error {
+  background-color: var(--error);
+}
+
+.bg-warning {
+  background-color: var(--warning);
+}
+
+.bg-info {
+  background-color: var(--info);
+}
+
+/* ============================================
+   CARD - Clean & Minimal
+   ============================================ */
+
+.card {
+  @apply bg-white rounded-2xl p-6;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+}
+
+.card-sm {
+  @apply bg-white rounded-2xl p-4;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+}
+
+/* ============================================
+   BUTTONS - Clean & Minimal
+   ============================================ */
+
+.btn {
+  @apply px-6 py-3 rounded-xl font-semibold text-base border-none cursor-pointer;
+  transition: none;
+}
+
+.btn:active {
+  opacity: 0.7;
+}
+
+.btn-primary {
+  @apply btn bg-gold text-dark;
+}
+
+.btn-secondary {
+  @apply btn bg-white text-dark border-2 border-gold;
+}
+
+.btn-success {
+  @apply btn bg-success text-white;
+}
+
+.btn-error {
+  @apply btn bg-error text-white;
+}
+
+.btn-ghost {
+  @apply btn bg-transparent text-dark;
+}
+
+.btn-sm {
+  @apply px-4 py-2 text-sm;
+}
+
+.btn-lg {
+  @apply px-8 py-4 text-lg;
+}
+
+.btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* ============================================
+   FORM INPUTS - Clean & Minimal
+   ============================================ */
+
+.input {
+  @apply w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-dark text-base outline-none;
+  transition: none;
+}
+
+.input:focus {
+  @apply border-gold;
+}
+
+.input::placeholder {
+  @apply text-light opacity-70;
+}
+
+.label {
+  @apply block font-medium text-dark mb-1.5 text-sm;
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
+
+.badge {
+  @apply inline-block px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.badge-completed {
+  @apply bg-success/10 text-success;
+}
+
+.badge-in-progress {
+  @apply bg-warning/10 text-warning;
+}
+
+.badge-failed {
+  @apply bg-error/10 text-error;
+}
+
+.badge-locked {
+  @apply bg-gray-100 text-light;
+}
+
+/* ============================================
+   LOADING SPINNER
+   ============================================ */
+
+.spinner {
+  @apply w-10 h-10 border-4 border-cream border-t-gold rounded-full;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   GLASS EFFECT - Clean & Subtle
+   ============================================ */
+
 .glass {
-  @apply bg-white bg-opacity-70 backdrop-blur-md;
+  @apply bg-white/70 backdrop-blur-md;
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+@layer utilities {
+  .container-sm {
+    @apply max-w-4xl mx-auto px-4;
+  }
+
+  .container-xs {
+    @apply max-w-2xl mx-auto px-4;
+  }
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  .card {
+    @apply p-4;
+  }
+
+  .btn {
+    @apply px-4 py-2.5 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+
+  .input {
+    @apply px-3 py-2.5 text-sm;
+  }
+}
+
+/* ============================================
+   STORY READER SPECIFIC
+   ============================================ */
+
+.story-container {
+  @apply max-w-3xl mx-auto px-4 py-4;
+}
+
+.story-image {
+  @apply w-full max-h-48 object-cover rounded-2xl mb-4;
+}
+
+.story-content {
+  @apply bg-white rounded-2xl p-6 max-h-96 overflow-y-auto leading-relaxed text-lg;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+}
+
+.story-word {
+  transition: none;
+}
+
+.story-word.active {
+  @apply bg-gold text-dark px-0.5 rounded;
+}
+
+.story-word.past {
+  @apply text-success;
+}
+
+/* ============================================
+   QUIZ SPECIFIC
+   ============================================ */
+
+.quiz-option {
+  @apply w-full text-left px-4 py-3 bg-white border-2 border-gray-200 rounded-xl text-base cursor-pointer;
+  transition: none;
+}
+
+.quiz-option.correct {
+  @apply border-success bg-success/10;
+}
+
+.quiz-option.wrong {
+  @apply border-error bg-error/10;
+}
+
+.quiz-option.selected {
+  @apply border-gold;
+}
+
+.quiz-option:disabled {
+  @apply cursor-default;
+}
+
+/* ============================================
+   LEADERBOARD SPECIFIC
+   ============================================ */
+
+.leaderboard-rank {
+  @apply font-bold text-light min-w-10;
+}
+
+.leaderboard-rank.top1 {
+  color: #FFD700;
+}
+
+.leaderboard-rank.top2 {
+  color: #C0C0C0;
+}
+
+.leaderboard-rank.top3 {
+  color: #CD7F32;
+}
+
+/* ============================================
+   ADMIN SPECIFIC
+   ============================================ */
+
+.admin-stat {
+  @apply bg-white rounded-2xl p-5 text-center;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+}
+
+.admin-stat-number {
+  @apply text-3xl font-bold text-dark;
+}
+
+.admin-stat-label {
+  @apply text-sm text-light mt-1;
+}
+
+/* ============================================
+   PROFILE SPECIFIC
+   ============================================ */
+
+.profile-avatar {
+  @apply w-24 h-24 rounded-full object-cover border-4 border-gold;
+}
+
+/* ============================================
+   NAVIGATION
+   ============================================ */
+
+.nav-link {
+  @apply flex items-center gap-3 px-4 py-3 rounded-xl text-medium font-medium;
+}
+
+.nav-link.active {
+  @apply bg-gold text-dark;
+}
+
+/* ============================================
+   HEADER & SIDEBAR
+   ============================================ */
+
+.header {
+  @apply fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 px-6 py-3;
+}
+
+.sidebar {
+  @apply fixed left-0 top-16 bottom-0 w-56 bg-white border-r border-gray-100 p-4 overflow-y-auto;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+.footer {
+  @apply text-center py-4 text-light text-sm border-t border-gray-100 bg-white;
 }

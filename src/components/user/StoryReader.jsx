@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { storyService } from '../../services/storyService'
-import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 
 export default function StoryReader() {
@@ -25,7 +24,7 @@ export default function StoryReader() {
 
   const VALID_LEVELS = ['easy', 'average', 'difficult']
 
-  // Validate level locally — no 'levels' table exists in the schema
+  // Validate level
   useEffect(() => {
     if (!VALID_LEVELS.includes(level)) {
       setError(`The "${level}" reading level was not found.`)
@@ -81,9 +80,7 @@ export default function StoryReader() {
     if (!audio) return
 
     if (audio.paused) {
-      audio.play().catch((err) => {
-        console.error('Unable to play story audio:', err)
-      })
+      audio.play().catch(() => {})
     } else {
       audio.pause()
     }
@@ -96,9 +93,7 @@ export default function StoryReader() {
       setCurrentWordIndex(-1)
       setProgress(0)
       if (audio.paused) {
-        audio.play().catch((err) => {
-          console.error('Unable to restart story audio:', err)
-        })
+        audio.play().catch(() => {})
       }
     }
   }, [])
@@ -161,7 +156,7 @@ export default function StoryReader() {
     let wordCounter = 0
 
     return paragraphs.map((paragraph, pIndex) => (
-      <p key={pIndex} className="mb-4 leading-relaxed text-lg">
+      <p key={pIndex} className="mb-6 last:mb-0 text-xl leading-loose text-dark">
         {paragraph.split(' ').map((word) => {
           const currentIndex = wordCounter
           const isActive = currentIndex === currentWordIndex
@@ -173,21 +168,19 @@ export default function StoryReader() {
           wordCounter++
 
           return (
-            <span
-              key={currentIndex}
-              ref={(el) => (wordRefs.current[currentIndex] = el)}
-              className={`
-                inline-block transition-all duration-150 cursor-pointer
-                ${isActive ? 'scale-110' : ''}
-                ${isPast ? 'text-green-600' : ''}
-                ${isActive ? 'text-white bg-gold px-1 rounded-md shadow-lg' : ''}
-                ${!isPast && !isActive ? 'text-gray-700' : ''}
-              `}
-            >
-              {cleanWord}
-              <span className="text-inherit">{punctuation}</span>
-              <span className="inline-block w-1"> </span>
-            </span>
+            <React.Fragment key={currentIndex}>
+              <span
+                ref={(el) => (wordRefs.current[currentIndex] = el)}
+                className={`transition-colors duration-75 px-1 py-0.5 rounded-lg ${
+                  isActive ? 'bg-gold font-bold text-dark' : 
+                  isPast ? 'text-medium opacity-80' : 'text-dark'
+                }`}
+              >
+                {cleanWord}
+                <span className="text-inherit">{punctuation}</span>
+              </span>
+              <span> </span>
+            </React.Fragment>
           )
         })}
       </p>
@@ -196,10 +189,10 @@ export default function StoryReader() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading story...</p>
+          <div className="spinner mx-auto border-gold"></div>
+          <p className="text-medium mt-4 font-medium">Loading story...</p>
         </div>
       </div>
     )
@@ -207,14 +200,11 @@ export default function StoryReader() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center text-red-600">
-          <p className="text-xl mb-2">⚠️ {error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-500"
-          >
-            Retry
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-error text-xl mb-4 font-bold">⚠️ {error}</p>
+          <button onClick={() => window.location.reload()} className="px-6 py-2 bg-gold text-dark font-bold rounded-full active:scale-95 transition-transform">
+            Try Again
           </button>
         </div>
       </div>
@@ -222,70 +212,72 @@ export default function StoryReader() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-dark">{metadata?.title || 'Story'}</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Level: {level?.charAt(0).toUpperCase() + level?.slice(1)}
-          </p>
-        </div>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="text-gray-500 hover:text-dark transition-colors"
+    <div className="max-w-4xl mx-auto px-4 py-2 flex flex-col" style={{ height: 'calc(100vh - 5rem)' }}>
+      {/* Navigation */}
+      <div className="mb-2">
+        <button 
+          onClick={() => navigate('/dashboard')} 
+          className="flex items-center gap-2 text-medium font-bold active:opacity-70 transition-opacity text-sm"
         >
-          ← Back
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+          Back
         </button>
       </div>
 
-      {/* Image */}
-      {imageUrl && (
-        <div className="rounded-xl overflow-hidden shadow-lg">
+      {/* Media Header (Image + Title + Controls) */}
+      <div className="flex flex-col md:flex-row items-center md:items-end justify-center gap-3 mb-3 max-w-3xl mx-auto">
+        {/* Image */}
+        {imageUrl && (
           <img 
             src={imageUrl} 
             alt={metadata?.title || 'Story illustration'}
-            className="w-full h-64 object-cover"
+            className="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-cover shadow-sm border-3 border-white flex-shrink-0"
             loading="lazy"
             onError={(e) => {
               e.target.style.display = 'none'
             }}
           />
-        </div>
-      )}
+        )}
 
-      {/* Audio Player */}
-      <div className="bg-white rounded-xl shadow-md p-4">
-        <audio
-          ref={audioRef}
-          src={audioUrl}
-          className="hidden"
-          preload="auto"
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onTimeUpdate={handleAudioTimeUpdate}
-          onEnded={handleAudioEnded}
-        />
-        
-        <div className="flex items-center gap-4">
-          <button
-            onClick={togglePlay}
-            className="w-12 h-12 rounded-full bg-gold hover:bg-amber-500 text-white flex items-center justify-center transition-all hover:scale-105"
-          >
-            {isPlaying ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            )}
-          </button>
+        {/* Info & Controls */}
+        <div className="flex-1 flex flex-col justify-center w-full max-w-lg">
+          {/* Title */}
+          <div className="text-center md:text-left mb-2">
+            <h1 className="text-xl md:text-2xl font-bold text-dark">{metadata?.title || 'Story'}</h1>
+            <p className="text-xs font-bold text-medium opacity-80 mt-0.5">
+              Level: {level?.charAt(0).toUpperCase() + level?.slice(1)}
+            </p>
+          </div>
 
-          <div className="flex-1">
-            <div className="relative">
+          {/* Audio Player */}
+          <div className="bg-white rounded-full p-2 flex items-center gap-4 shadow-sm w-full">
+            <audio
+              ref={audioRef}
+              src={audioUrl}
+              className="hidden"
+              preload="auto"
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onTimeUpdate={handleAudioTimeUpdate}
+              onEnded={handleAudioEnded}
+            />
+            
+            <button 
+              onClick={togglePlay} 
+              className="w-12 h-12 rounded-full bg-gold text-dark flex items-center justify-center flex-shrink-0 active:scale-95 transition-transform shadow-sm"
+            >
+              {isPlaying ? (
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+
+            <div className="flex-1 px-2 flex items-center">
               <input
                 type="range"
                 min="0"
@@ -299,62 +291,50 @@ export default function StoryReader() {
                     audioRef.current.currentTime = (value / 100) * duration
                   }
                 }}
-                className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
-                style={{
-                  background: `linear-gradient(to right, #E9D2A9 ${progress}%, #d1d5db ${progress}%)`
-                }}
+                className="w-full h-2 bg-cream rounded-full appearance-none accent-medium"
               />
             </div>
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>
-                {audioRef.current ? formatTime(audioRef.current.currentTime) : '0:00'}
-              </span>
-              <span>
-                {audioRef.current ? formatTime(audioRef.current.duration) : '0:00'}
-              </span>
-            </div>
-          </div>
 
-          <button
-            onClick={restartAudio}
-            className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
+            <span className="text-sm text-dark font-bold font-mono min-w-[3rem]">
+              {audioRef.current ? formatTime(audioRef.current.currentTime) : '0:00'}
+            </span>
+
+            <button 
+              onClick={restartAudio} 
+              className="w-10 h-10 rounded-full text-dark flex items-center justify-center active:bg-gold active:scale-95 transition-all mr-1"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Story Content */}
       <div 
-        ref={containerRef}
-        className="bg-white rounded-xl shadow-md p-6 max-h-96 overflow-y-auto prose max-w-none"
+        ref={containerRef} 
+        className="bg-white rounded-2xl p-4 md:p-6 overflow-y-auto shadow-sm border-2 border-cream flex-1 min-h-0 mb-2"
       >
         {renderContentWithHighlight()}
       </div>
 
       {/* Progress and Navigation */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-gray-500">
-          Progress: {Math.round(progress)}%
-        </div>
+      <div className="flex items-center justify-between py-2 flex-shrink-0">
+        <span className="text-sm font-bold text-medium">
+          {Math.round(progress)}% read
+        </span>
         <button
           onClick={() => navigate(`/quiz/${level}`)}
-          className={`px-6 py-2 rounded-lg transition-all ${
+          className={`px-6 py-2 rounded-full font-bold text-base transition-transform ${
             progress >= 50
-              ? 'bg-gold hover:bg-amber-500 text-white shadow-md hover:shadow-lg'
-              : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+              ? 'bg-gold text-dark active:scale-95 shadow-sm'
+              : 'bg-cream text-medium opacity-50 cursor-not-allowed'
           }`}
           disabled={progress < 50}
         >
-          {progress >= 50 ? 'Continue to Quiz →' : 'Read more to continue'}
+          {progress >= 50 ? 'Quiz Time! →' : 'Read more to unlock'}
         </button>
-      </div>
-
-      {/* Keyboard Shortcut Hint */}
-      <div className="text-center text-xs text-gray-400">
-        Press <kbd className="px-2 py-1 bg-gray-200 rounded">Space</kbd> to play/pause
       </div>
     </div>
   )
@@ -369,7 +349,6 @@ function formatTime(seconds) {
 
 function getTimingEntries(timing) {
   if (Array.isArray(timing)) return timing
-
   const entries = timing?.karaoke || timing?.timing || timing?.words
   return Array.isArray(entries) ? entries : []
 }

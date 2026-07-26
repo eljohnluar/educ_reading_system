@@ -1,6 +1,7 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import toast from 'react-hot-toast'
 import { 
   LayoutDashboard, 
   Users, 
@@ -8,7 +9,8 @@ import {
   ClipboardList, 
   User, 
   Trophy, 
-  Shield 
+  Shield,
+  LogOut 
 } from 'lucide-react'
 
 // User links - only for regular users
@@ -27,7 +29,19 @@ const adminLinks = [
 ]
 
 export default function Sidebar({ isOpen, onClose }) {
-  const { profile, isAdmin } = useAuth()
+  const { profile, isAdmin, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      if (onClose) onClose()
+      await signOut()
+      toast.success('Logged out successfully')
+      navigate('/login')
+    } catch (error) {
+      toast.error('Failed to logout')
+    }
+  }
 
   // If admin, show admin links
   if (isAdmin) {
@@ -40,28 +54,41 @@ export default function Sidebar({ isOpen, onClose }) {
             onClick={onClose}
           />
         )}
-        <aside className={`fixed left-0 top-16 bottom-0 w-64 bg-[#1A2634]/95 md:bg-[#1A2634]/90 backdrop-blur-xl border-r border-white/10 overflow-y-auto z-40 transition-transform duration-300 md:translate-x-0 ${
+        <aside className={`fixed left-0 top-16 bottom-0 w-64 bg-[#1A2634]/95 md:bg-[#1A2634]/90 backdrop-blur-xl border-r border-white/10 z-40 transition-transform duration-300 md:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
-          <nav className="p-4 space-y-1.5">
-            <div className="pb-3 mb-3 px-3 border-b border-white/10">
-              <p className="text-[11px] uppercase tracking-wider text-[#E9D2A9] font-semibold flex items-center gap-2">
-                <Shield className="w-3.5 h-3.5 text-[#E9D2A9]" />
-                Admin Panel
-              </p>
-            </div>
-            {adminLinks.map(({ to, label, Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                onClick={onClose}
-                className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm text-gray-300 font-medium transition-all duration-200 active:scale-[0.98] hover:bg-gradient-to-r hover:from-[#E9D2A9] hover:to-[#d4b988] hover:text-[#1A2634] hover:font-bold hover:shadow-lg hover:shadow-[#E9D2A9]/30 active:shadow-[#E9D2A9]/50"
+          <div className="flex flex-col h-full">
+            <nav className="p-4 space-y-1.5 flex-1 overflow-y-auto">
+              <div className="pb-3 mb-3 px-3 border-b border-white/10">
+                <p className="text-[11px] uppercase tracking-wider text-[#E9D2A9] font-semibold flex items-center gap-2">
+                  <Shield className="w-3.5 h-3.5 text-[#E9D2A9]" />
+                  Admin Panel
+                </p>
+              </div>
+              {adminLinks.map(({ to, label, Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  onClick={onClose}
+                  className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm text-gray-300 font-medium transition-all duration-200 active:scale-[0.98] hover:bg-gradient-to-r hover:from-[#E9D2A9] hover:to-[#d4b988] hover:text-[#1A2634] hover:font-bold hover:shadow-lg hover:shadow-[#E9D2A9]/30 active:shadow-[#E9D2A9]/50"
+                >
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span>{label}</span>
+                </NavLink>
+              ))}
+            </nav>
+
+            {/* Logout Button at Bottom */}
+            <div className="p-4 border-t border-white/10">
+              <button
+                onClick={handleLogout}
+                className="flex items-center space-x-3 w-full px-4 py-3 rounded-xl text-sm text-gray-400 font-medium transition-all duration-200 hover:bg-red-500/15 hover:text-red-400 active:scale-[0.98]"
               >
-                <Icon className="w-4 h-4 shrink-0" />
-                <span>{label}</span>
-              </NavLink>
-            ))}
-          </nav>
+                <LogOut className="w-4 h-4 shrink-0" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
         </aside>
       </>
     )

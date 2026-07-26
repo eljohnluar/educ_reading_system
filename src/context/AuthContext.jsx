@@ -87,6 +87,32 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  const sendOtp = async (email) => {
+    const { data, error } = await supabase.auth.signInWithOtp({ email })
+    if (error) throw error
+    return data
+  }
+
+  const verifyOtp = async (email, token) => {
+    const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' })
+    if (error) throw error
+    return data
+  }
+
+  const resetPassword = async (email) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (error) throw error
+    return data
+  }
+
+  const updatePassword = async (newPassword) => {
+    const { data, error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw error
+    return data
+  }
+
   const signUp = async (email, password, username, privacyAgreed) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -125,6 +151,10 @@ export function AuthProvider({ children }) {
     profile,
     loading,
     signIn,
+    sendOtp,
+    verifyOtp,
+    resetPassword,
+    updatePassword,
     signUp,
     signOut,
     updateProfile,

@@ -80,7 +80,7 @@ export default function LandingNavbar() {
           e.currentTarget.style.boxShadow = '0 2px 12px rgba(233, 210, 169, 0.3)'
         }}
       >
-        Login →
+        Login
       </Link>
     </nav>
   )

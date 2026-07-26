@@ -93,7 +93,7 @@ export default function LandingPage() {
           custom={0}
           className="hero-badge"
         >
-          ✨ Gamified English Reading System
+           Gamified English Reading System
         </motion.div>
 
         <motion.h1
@@ -127,7 +127,7 @@ export default function LandingPage() {
           custom={3}
         >
           <Link to="/register" className="btn-primary">
-            🚀 Get Started — It's Free
+             Get Started 
           </Link>
           <Link to="/login" className="btn-secondary">
             Already a member? Login
@@ -286,7 +286,7 @@ export default function LandingPage() {
           </p>
           <br />
           <Link to="/register" className="btn-dark">
-            🎓 Create Free Account
+             Create Free Account
           </Link>
         </motion.div>
       </section>

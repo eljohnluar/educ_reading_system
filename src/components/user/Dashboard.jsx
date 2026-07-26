@@ -93,121 +93,130 @@ export default function Dashboard() {
   const totalLevels = LEVELS.length
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-6xl mx-auto space-y-8 pb-10 mt-4">
       {/* Welcome Section */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <h1 className="text-3xl font-bold text-dark">
-          Welcome back, {profile?.username || 'Learner'}! 👋
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="pb-6 border-b border-cream"
+      >
+        <h1 className="text-3xl md:text-4xl font-bold text-dark mb-1">
+          Welcome back, {profile?.username || 'Learner'}
         </h1>
-        <p className="text-gray-600 mt-2">
-          Continue your English reading journey. You've completed {completedCount} out of {totalLevels} levels.
+        <p className="text-base text-medium/80 font-medium">
+          You've completed {completedCount} of {totalLevels} reading levels. Keep it up!
         </p>
-      </div>
+      </motion.div>
 
       {/* Stats Section */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-md p-4 text-center">
-            <p className="text-2xl font-bold text-gold">{stats.total_score || 0}</p>
-            <p className="text-sm text-gray-500">Total Score</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-md p-4 text-center">
-            <p className="text-2xl font-bold text-green-500">{stats.levels_completed || 0}</p>
-            <p className="text-sm text-gray-500">Levels Completed</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-md p-4 text-center">
-            <p className="text-2xl font-bold text-blue-500">{stats.average_score || 0}</p>
-            <p className="text-sm text-gray-500">Average Score</p>
-          </div>
-          <div className="bg-white rounded-xl shadow-md p-4 text-center">
-            <p className="text-2xl font-bold text-purple-500">{stats.perfect_scores || 0}</p>
-            <p className="text-sm text-gray-500">Perfect Scores</p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          {[
+            { label: 'Total Score', value: stats.total_score || 0 },
+            { label: 'Levels Completed', value: stats.levels_completed || 0 },
+            { label: 'Avg Score', value: stats.average_score || 0 },
+            { label: 'Perfect Scores', value: stats.perfect_scores || 0 }
+          ].map((stat, idx) => (
+            <motion.div 
+              key={idx}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              className="bg-white rounded-xl border border-cream p-4 flex flex-col items-start justify-center"
+            >
+              <p className="text-3xl font-bold text-dark mb-1">
+                {stat.value}
+              </p>
+              <p className="text-sm font-semibold text-medium/70 uppercase tracking-wide">
+                {stat.label}
+              </p>
+            </motion.div>
+          ))}
         </div>
       )}
 
       {/* Levels Section */}
-      <h2 className="text-2xl font-bold text-dark">Your Learning Path</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {LEVELS.map((level, index) => {
-          const status = getLevelStatus(level)
-          const isUnlocked = status.status !== 'locked'
-          const isCompleted = status.status === 'completed'
+      <div>
+        <h2 className="text-xl font-bold text-dark mb-4">Learning Path</h2>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {LEVELS.map((level, index) => {
+            const status = getLevelStatus(level)
+            const isUnlocked = status.status !== 'locked'
+            const isCompleted = status.status === 'completed'
 
-          return (
-            <motion.div
-              key={level.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`bg-white rounded-xl shadow-md overflow-hidden transition-all hover:shadow-xl ${
-                !isUnlocked ? 'opacity-75' : ''
-              }`}
-            >
-              <div 
-                className="h-2" 
-                style={{ backgroundColor: level.colorCode }}
-              ></div>
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-4xl">{level.icon}</span>
-                  <span className={`text-sm font-medium px-3 py-1 rounded-full ${
-                    status.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    status.status === 'in_progress' ? 'bg-yellow-100 text-yellow-700' :
-                    status.status === 'failed' ? 'bg-red-100 text-red-700' :
-                    'bg-gray-100 text-gray-500'
+            return (
+              <motion.div
+                key={level.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + index * 0.05 }}
+                className={`bg-white rounded-xl border ${
+                  isUnlocked ? 'border-cream hover:border-gold/60' : 'border-gray-100 bg-gray-50/50'
+                } flex flex-col p-6 transition-colors ${!isUnlocked ? 'opacity-60' : ''}`}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <span className="text-3xl grayscale-[0.2]">{level.icon}</span>
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded capitalize ${
+                    status.status === 'completed' ? 'bg-success/10 text-success' :
+                    status.status === 'in_progress' ? 'bg-gold/20 text-medium' :
+                    status.status === 'failed' ? 'bg-error/10 text-error' :
+                    'bg-gray-200 text-gray-500'
                   }`}>
-                    {status.label}
+                    {status.label.replace(/[^a-zA-Z\s]/g, '')}
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-dark capitalize">{level.name}</h3>
-                <p className="text-sm text-gray-500 mt-1">{level.description}</p>
+                
+                <h3 className="text-xl font-bold text-dark capitalize mb-1">{level.name}</h3>
+                <p className="text-sm font-medium text-medium/70 mb-5 flex-1">
+                  {level.description}
+                </p>
 
                 {isCompleted && progress[level.id] && (
-                  <div className="mt-3">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">Score: </span>
-                      <span className="text-lg font-bold text-gold">{progress[level.id].score}/6</span>
-                    </div>
+                  <div className="mb-4 text-xs font-semibold text-dark/70 flex items-center justify-between">
+                    <span>Highest Score:</span>
+                    <span>{progress[level.id].score} / 6</span>
                   </div>
                 )}
 
-                {isUnlocked ? (
-                  isCompleted ? (
-                    <div className="mt-4 space-y-2">
-                      <Link
-                        to={`/results/${level.id}`}
-                        className="block w-full text-center py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
-                      >
-                        📊 View Results
-                      </Link>
+                <div className="mt-auto pt-4 border-t border-cream/50">
+                  {isUnlocked ? (
+                    isCompleted ? (
+                      <div className="flex gap-2">
+                        <Link
+                          to={`/results/${level.id}`}
+                          className="flex-1 text-center py-2 bg-cream text-dark rounded-lg text-xs font-bold hover:bg-gold/30 transition-colors"
+                        >
+                          Results
+                        </Link>
+                        <Link
+                          to={`/story/${level.id}/1`}
+                          className="flex-[2] text-center py-2 bg-white border border-cream text-dark rounded-lg text-xs font-bold hover:border-gold transition-colors"
+                        >
+                          Read Again
+                        </Link>
+                      </div>
+                    ) : (
                       <Link
                         to={`/story/${level.id}/1`}
-                        className="block w-full text-center py-2 bg-cream text-dark border-2 border-transparent hover:border-gold rounded-lg font-semibold hover:bg-gold hover:text-white transition-all"
+                        className="block w-full text-center py-2 bg-dark text-white rounded-lg text-xs font-bold hover:bg-dark/90 transition-colors"
                       >
-                        📖 Read Story Again
+                        Start Reading
                       </Link>
-                    </div>
+                    )
                   ) : (
-                    <Link
-                      to={`/story/${level.id}/1`}
-                      className="mt-4 block w-full text-center py-2 bg-gold hover:bg-amber-500 text-white rounded-lg font-semibold shadow-md hover:shadow-lg transition-all"
+                    <button
+                      disabled
+                      className="w-full py-2 rounded-lg bg-gray-100 text-gray-400 text-xs font-bold cursor-not-allowed"
                     >
-                      📖 Start Reading
-                    </Link>
-                  )
-                ) : (
-                  <button
-                    disabled
-                    className="mt-4 w-full py-2 rounded-lg bg-gray-200 text-gray-500 cursor-not-allowed"
-                  >
-                    🔒 Locked
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          )
-        })}
+                      Locked
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

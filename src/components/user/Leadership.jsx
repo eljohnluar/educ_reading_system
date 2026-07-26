@@ -85,8 +85,8 @@ export default function Leadership() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-dark">🏆 Leadership Board</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-dark">🏆 Leadership Board</h1>
         {userRank && (
           <div className="bg-gold text-white px-4 py-2 rounded-lg">
             Your Rank: #{userRank}

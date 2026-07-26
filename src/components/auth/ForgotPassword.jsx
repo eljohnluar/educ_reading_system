@@ -1,29 +1,27 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
+  const { resetPassword } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (loading) return
     setLoading(true)
 
-    // TODO: Implement password reset when feature is ready
-    toast.info('Password reset feature is currently under development. Please check back soon.')
-    
-    // Placeholder - will be implemented in future
-    // try {
-    //   await supabase.auth.resetPasswordForEmail(email)
-    //   toast.success('Password reset email sent!')
-    // } catch (error) {
-    //   toast.error(error.message || 'Failed to send reset email')
-    // } finally {
-    //   setLoading(false)
-    // }
-    
-    setLoading(false)
+    try {
+      await resetPassword(email)
+      toast.success('Password reset email sent! Please check your inbox.')
+    } catch (error) {
+      console.error('Reset error:', error)
+      toast.error(error.message || 'Failed to send reset email')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -49,12 +47,6 @@ export default function ForgotPassword() {
               placeholder="you@example.com"
               required
             />
-          </div>
-
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-sm text-yellow-700">
-              🚧 This feature is currently under development. It will be available in a future update.
-            </p>
           </div>
 
           <button
