@@ -16,11 +16,11 @@ Built with React, Vite, and Tailwind CSS, the platform offers a beautiful, respo
 
 | Landing Page | Dashboard | Story Reader |
 |--------------|-----------|--------------|
-| ![Landing Page](https://via.placeholder.com/400x250/E5DCCD/2C3E50?text=Landing+Page) | ![Dashboard](https://via.placeholder.com/400x250/E5DCCD/2C3E50?text=Dashboard) | ![Story Reader](https://via.placeholder.com/400x250/E5DCCD/2C3E50?text=Story+Reader) |
+| ![Landing Page](README/screenshot/landingpage.jpg) | ![Dashboard](README/screenshot/dashboard.jpg) | ![Story Reader](README/screenshot/storyreader.jpg) |
 
 | Quiz | Results | Admin Dashboard |
 |------|---------|-----------------|
-| ![Quiz](https://via.placeholder.com/400x250/E5DCCD/2C3E50?text=Quiz) | ![Results](https://via.placeholder.com/400x250/E5DCCD/2C3E50?text=Results) | ![Admin](https://via.placeholder.com/400x250/E5DCCD/2C3E50?text=Admin) |
+| ![Quiz](README/screenshot/quiz.jpg) | ![Results](README/screenshot/results.jpg) | ![Admin](README/screenshot/admindashboard.jpg) |
 
 ---
 
@@ -106,24 +106,40 @@ Open your browser and visit http://localhost:5173.
  Project Structure
 
 src/
+
 ├── assets/         # Images, audio, and static assets
+
 ├── components/     # React components
+
 │   ├── admin/      # Admin dashboard and management views
+
 │   ├── auth/       # Login, Register, Password Reset
+
 │   ├── common/     # Reusable UI (Header, Loader, ProtectedRoute)
+
 │   ├── landing/    # Guest landing page
+
 │   └── user/       # Student dashboard, quiz, story reader, results
+
 ├── config/         # Configuration files (levels definition)
+
 ├── context/        # React Context (AuthContext, ProgressContext)
+
 ├── hooks/          # Custom React hooks
+
 ├── lib/            # Library instances (Supabase client)
+
 ├── services/       # API and external service integrations
+
 ├── styles/         # Additional global styles
+
 ├── App.jsx         # Main application router
+
 ├── index.css       # Global CSS and Tailwind directives
+
 └── main.jsx        # Application entry point
 
- UI/UX Design Philosophy
+### UI/UX Design Philosophy
 The application is designed with Premium Aesthetics in mind to keep students engaged:
 
 Color Palette: A curated mix of Gold (#E9D2A9), Cream (#E5DCCD), Dark Blue (#2C3E50), and status colors (Easy Green, Average Orange, Difficult Purple).
@@ -132,5 +148,5 @@ Micro-interactions: Hover effects, smooth page transitions, and confetti celebra
 
 Loading Experiences: A custom fullscreen animation showing a student walking and evolving through life stages while content loads.
 
- License
+### License
 This project is licensed under the MIT License.
