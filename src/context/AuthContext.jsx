@@ -46,7 +46,7 @@ export function AuthProvider({ children }) {
 
     if (!error && data) {
       setProfile(data)
-      return
+      return data
     }
 
     // No profile row found — the signup trigger may have failed.
@@ -71,11 +71,21 @@ export function AuthProvider({ children }) {
 
     if (!insertError && inserted) {
       setProfile(inserted)
+      return inserted
     } else {
       // Insert failed (e.g. RLS or duplicate) — still set in-memory so UI doesn't hang
       console.warn('Could not create profile row:', insertError)
-      setProfile({ ...newProfile, created_at: authUser.created_at })
+      const fallbackProfile = { ...newProfile, created_at: authUser.created_at }
+      setProfile(fallbackProfile)
+      return fallbackProfile
     }
+  }
+
+  // ✅ NEW: Refresh profile function
+  const refreshProfile = async () => {
+    if (!user) return null
+    const updatedProfile = await fetchProfile(user.id)
+    return updatedProfile
   }
 
   const signIn = async (email, password) => {
@@ -158,6 +168,7 @@ export function AuthProvider({ children }) {
     signUp,
     signOut,
     updateProfile,
+    refreshProfile,  // ✅ Add to context
     isAdmin: profile?.role === 'admin'
   }
 

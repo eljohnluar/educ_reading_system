@@ -1,14 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 import { LogOut, Menu, User } from 'lucide-react'
 
 export default function Header({ onMenuToggle }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, profile, isAdmin, signOut } = useAuth()
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
+
+  // ✅ Check if on Quiz or Results page
+  const isQuizOrResults = location.pathname.startsWith('/quiz') || 
+                          location.pathname.startsWith('/results')
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -30,6 +35,21 @@ export default function Header({ onMenuToggle }) {
     } catch (error) {
       toast.error('Failed to logout')
     }
+  }
+
+  // Get avatar URL with fallback placeholder
+  const getAvatarUrl = () => {
+    if (profile?.avatar_url && !profile.avatar_url.includes('default')) {
+      return profile.avatar_url
+    }
+    // Use a data URI or SVG placeholder if default image doesn't exist
+    return `data:image/svg+xml,${encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+        <circle cx="16" cy="16" r="16" fill="#E9D2A9"/>
+        <circle cx="16" cy="12" r="5" fill="#1A2634" opacity="0.6"/>
+        <path d="M5 26 Q16 20 27 26" stroke="#1A2634" stroke-width="3" fill="none" opacity="0.6"/>
+      </svg>
+    `)}`
   }
 
   return (
@@ -63,24 +83,41 @@ export default function Header({ onMenuToggle }) {
         <div className="flex items-center">
           {user && !isAdmin && (
             <div className="relative" ref={dropdownRef}>
-              {/* Profile Avatar Button */}
+              {/* Profile Avatar Button - Disabled on Quiz/Results */}
               <button
-                onClick={() => setDropdownOpen((prev) => !prev)}
-                className="flex items-center hover:opacity-80 transition-opacity focus:outline-none"
+                onClick={() => {
+                  if (!isQuizOrResults) {
+                    setDropdownOpen((prev) => !prev)
+                  }
+                }}
+                className={`flex items-center focus:outline-none ${
+                  isQuizOrResults ? 'cursor-default opacity-70' : 'hover:opacity-80 transition-opacity cursor-pointer'
+                }`}
                 aria-label="User menu"
+                disabled={isQuizOrResults}
               >
                 <img 
-                  src={profile?.avatar_url || '/assets/images/avatars/default.jpg'}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full object-cover border-2 border-[#E9D2A9]/60 hover:border-[#E9D2A9] transition-colors"
+                  src={getAvatarUrl()}
+                  alt={profile?.username || 'User'}
+                  className={`w-8 h-8 rounded-full object-cover border-2 border-[#E9D2A9]/60 transition-colors ${
+                    isQuizOrResults ? '' : 'hover:border-[#E9D2A9]'
+                  }`}
                   onError={(e) => {
-                    e.target.src = '/assets/images/avatars/default.jpg'
+                    // Fallback to initials if image fails
+                    e.target.style.display = 'none'
+                    const parent = e.target.parentElement
+                    if (parent) {
+                      const fallback = document.createElement('div')
+                      fallback.className = 'w-8 h-8 rounded-full bg-[#E9D2A9]/20 border-2 border-[#E9D2A9]/60 flex items-center justify-center text-white text-sm font-bold'
+                      fallback.textContent = profile?.username?.charAt(0).toUpperCase() || 'U'
+                      parent.appendChild(fallback)
+                    }
                   }}
                 />
               </button>
 
-              {/* Dropdown Modal */}
-              {dropdownOpen && (
+              {/* Dropdown Modal - Only shown when not on Quiz/Results */}
+              {!isQuizOrResults && dropdownOpen && (
                 <div className="absolute right-0 top-full mt-2 w-48 bg-[#1A2634] backdrop-blur-xl border border-white/15 rounded-xl shadow-2xl overflow-hidden z-[60] animate-in fade-in slide-in-from-top-1">
                   <div className="py-1.5">
                     <Link

@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
+import { Camera, User, Loader2 } from 'lucide-react'
 
 export default function Profile() {
   const { user, profile, updateProfile } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [stats, setStats] = useState(null)
   const [formData, setFormData] = useState({
     username: '',
@@ -18,6 +20,7 @@ export default function Profile() {
     confirmPassword: ''
   })
   const [isEditing, setIsEditing] = useState(false)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     if (profile) {
@@ -60,11 +63,24 @@ export default function Profile() {
   }
 
   const uploadAvatar = async (event) => {
-    try {
-      setLoading(true)
-      const file = event.target.files[0]
-      if (!file) return
+    const file = event.target.files[0]
+    if (!file) return
 
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
+      return
+    }
+
+    // Validate file size (2MB max)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be less than 2MB')
+      return
+    }
+
+    setUploading(true)
+
+    try {
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random().toString(36).substring(7)}.${fileExt}`
       const filePath = `${user.id}/${fileName}`
@@ -86,7 +102,7 @@ export default function Profile() {
     } catch (error) {
       toast.error(error.message || 'Error uploading image')
     } finally {
-      setLoading(false)
+      setUploading(false)
     }
   }
 
@@ -126,6 +142,21 @@ export default function Profile() {
     }
   }
 
+  // Get avatar URL with proper fallback
+  const getAvatarUrl = () => {
+    const avatar = (isEditing ? formData.avatar_url : profile?.avatar_url)
+    if (avatar && !avatar.includes('default') && !avatar.includes('null')) {
+      return avatar
+    }
+    return '/assets/images/avatars/default.jpg'
+  }
+
+  // Get initials for fallback
+  const getInitials = () => {
+    const name = profile?.username || 'U'
+    return name.charAt(0).toUpperCase()
+  }
+
   if (!profile) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -145,16 +176,41 @@ export default function Profile() {
         className="bg-white rounded-xl shadow-md p-6"
       >
         <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
-          <div className="flex-shrink-0">
-            <img
-              src={(isEditing ? formData.avatar_url : profile.avatar_url) || '/assets/images/avatars/default.jpg'}
-              alt="Avatar"
-              className="w-24 h-24 rounded-full object-cover border-4 border-gold"
-              onError={(e) => {
-                e.target.src = '/assets/images/avatars/default.jpg'
-              }}
-            />
+          {/* Avatar with placeholder fallback */}
+          <div className="flex-shrink-0 relative">
+            <div className="w-24 h-24 rounded-full border-4 border-gold overflow-hidden bg-cream flex items-center justify-center">
+              {isEditing && uploading ? (
+                <Loader2 className="w-8 h-8 text-gold animate-spin" />
+              ) : (
+                <img
+                  src={getAvatarUrl()}
+                  alt={profile.username}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // If image fails to load, show initials
+                    e.target.style.display = 'none'
+                    const parent = e.target.parentElement
+                    if (parent) {
+                      const fallback = document.createElement('div')
+                      fallback.className = 'w-full h-full flex items-center justify-center text-3xl font-bold text-dark bg-cream'
+                      fallback.textContent = getInitials()
+                      parent.appendChild(fallback)
+                    }
+                  }}
+                />
+              )}
+            </div>
+            {isEditing && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-0 p-1.5 bg-gold rounded-full shadow-md hover:bg-amber-500 transition-colors"
+                disabled={uploading}
+              >
+                <Camera className="w-4 h-4 text-dark" />
+              </button>
+            )}
           </div>
+
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:justify-between">
               <div className="text-center sm:text-left">
@@ -166,7 +222,7 @@ export default function Profile() {
               </div>
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="px-4 py-2 bg-gold text-white rounded-lg hover:bg-amber-500 transition-all"
+                className="px-4 py-2 bg-gold text-dark rounded-lg hover:bg-amber-500 transition-all font-medium"
               >
                 {isEditing ? 'Cancel' : 'Edit Profile'}
               </button>
@@ -194,18 +250,21 @@ export default function Profile() {
                   Avatar Image
                 </label>
                 <input
+                  ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   onChange={uploadAvatar}
-                  disabled={loading}
+                  disabled={uploading}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold focus:border-transparent outline-none"
                 />
-                <p className="text-xs text-gray-500 mt-1">Select an image to upload it to your profile.</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  JPG, PNG, or WEBP • Max 2MB
+                </p>
               </div>
               <button
                 type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-gold text-white rounded-lg hover:bg-amber-500 transition-all disabled:opacity-50"
+                disabled={loading || uploading}
+                className="px-6 py-2 bg-gold text-dark rounded-lg hover:bg-amber-500 transition-all disabled:opacity-50 font-medium"
               >
                 {loading ? 'Saving...' : 'Save Changes'}
               </button>
@@ -293,7 +352,7 @@ export default function Profile() {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-gold text-white rounded-lg hover:bg-amber-500 transition-all disabled:opacity-50"
+            className="px-6 py-2 bg-gold text-dark rounded-lg hover:bg-amber-500 transition-all disabled:opacity-50 font-medium"
           >
             {loading ? 'Updating...' : 'Update Password'}
           </button>

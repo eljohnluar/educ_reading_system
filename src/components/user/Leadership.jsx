@@ -26,7 +26,6 @@ export default function Leadership() {
     }
   }, [selectedLevel])
 
-
   const fetchLeaderboardData = async () => {
     try {
       setLoading(true)
@@ -72,6 +71,19 @@ export default function Leadership() {
     return index >= 0 ? index + 1 : null
   }
 
+  // Get avatar URL with fallback
+  const getAvatarUrl = (avatarUrl) => {
+    if (avatarUrl && !avatarUrl.includes('default') && !avatarUrl.includes('null')) {
+      return avatarUrl
+    }
+    return '/assets/images/avatars/default.jpg'
+  }
+
+  // Get initials for fallback
+  const getInitials = (username) => {
+    return username?.charAt(0).toUpperCase() || 'U'
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -86,9 +98,9 @@ export default function Leadership() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h1 className="text-2xl sm:text-3xl font-bold text-dark">🏆 Leadership Board</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-dark"> Leadership Board</h1>
         {userRank && (
-          <div className="bg-gold text-white px-4 py-2 rounded-lg">
+          <div className="bg-gold text-dark px-4 py-2 rounded-lg font-semibold">
             Your Rank: #{userRank}
           </div>
         )}
@@ -100,8 +112,8 @@ export default function Leadership() {
           onClick={() => setSelectedLevel('overall')}
           className={`px-4 py-2 rounded-lg transition-all ${
             selectedLevel === 'overall'
-              ? 'bg-gold text-white shadow-md'
-              : 'bg-white text-gray-600 hover:bg-cream'
+              ? 'bg-gold text-dark font-semibold'
+              : 'bg-white text-gray-600'
           }`}
         >
           Overall
@@ -112,8 +124,8 @@ export default function Leadership() {
             onClick={() => setSelectedLevel(level.level_name)}
             className={`px-4 py-2 rounded-lg transition-all capitalize ${
               selectedLevel === level.level_name
-                ? 'bg-gold text-white shadow-md'
-                : 'bg-white text-gray-600 hover:bg-cream'
+                ? 'bg-gold text-dark font-semibold'
+                : 'bg-white text-gray-600'
             }`}
           >
             {level.level_name}
@@ -121,17 +133,17 @@ export default function Leadership() {
         ))}
       </div>
 
-      {/* Leaderboard Table */}
+      {/* Leaderboard Table - White header */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-cream">
+            <thead className="bg-white">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-dark">#</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-dark">User</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-dark">Score</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-dark">Levels Completed</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-dark">Avg Score</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-dark border-b border-gray-200">#</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-dark border-b border-gray-200">User</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-dark border-b border-gray-200">Score</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-dark border-b border-gray-200">Levels Completed</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-dark border-b border-gray-200">Avg Score</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -150,9 +162,7 @@ export default function Leadership() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className={`hover:bg-cream transition-colors ${
-                        isCurrentUser ? 'bg-gold bg-opacity-20' : ''
-                      }`}
+                      className="bg-white"
                     >
                       <td className="px-6 py-4">
                         <span className={`font-bold ${
@@ -166,14 +176,23 @@ export default function Leadership() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
-                          <img
-                            src={item.avatar_url || '/assets/images/avatars/default.jpg'}
-                            alt={item.username}
-                            className="w-8 h-8 rounded-full object-cover"
-                            onError={(e) => {
-                              e.target.src = '/assets/images/avatars/default.jpg'
-                            }}
-                          />
+                          <div className="relative w-8 h-8 flex-shrink-0">
+                            <img
+                              src={getAvatarUrl(item.avatar_url)}
+                              alt={item.username}
+                              className="w-8 h-8 rounded-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none'
+                                const parent = e.target.parentElement
+                                if (parent) {
+                                  const fallback = document.createElement('div')
+                                  fallback.className = 'w-8 h-8 rounded-full bg-gold/30 flex items-center justify-center text-dark text-sm font-bold'
+                                  fallback.textContent = getInitials(item.username)
+                                  parent.appendChild(fallback)
+                                }
+                              }}
+                            />
+                          </div>
                           <span className={`font-medium ${isCurrentUser ? 'text-gold' : 'text-dark'}`}>
                             {item.username}
                             {isCurrentUser && ' (You)'}

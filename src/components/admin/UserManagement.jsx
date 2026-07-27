@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { adminService } from '../../services/adminService'
 import { supabase } from '../../lib/supabase'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { Users, Search, Eye, Trash2, X, CheckCircle2, XCircle } from 'lucide-react'
+import { Users, Search, Eye, Trash2, X, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 
 export default function UserManagement() {
   const [users, setUsers] = useState([])
@@ -11,6 +11,9 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedUser, setSelectedUser] = useState(null)
   const [showUserDetail, setShowUserDetail] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [userToDelete, setUserToDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -61,21 +64,33 @@ export default function UserManagement() {
     }
   }
 
-  const handleDeleteUser = async (userId) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return
-    }
+  // ✅ Open delete confirmation modal
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user)
+    setShowDeleteModal(true)
+  }
+
+  // ✅ Confirm delete
+  const confirmDelete = async () => {
+    if (!userToDelete) return
+
+    setIsDeleting(true)
 
     try {
       const { error } = await supabase
-        .rpc('delete_user_by_admin', { p_user_id: userId })
+        .rpc('delete_user_by_admin', { p_user_id: userToDelete.id })
       
       if (error) throw error
-      toast.success('User deleted successfully')
+
+      toast.success(`User "${userToDelete.username}" deleted successfully`)
+      setShowDeleteModal(false)
+      setUserToDelete(null)
       fetchUsers()
     } catch (error) {
       console.error('Error deleting user:', error)
       toast.error('Failed to delete user')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -168,7 +183,7 @@ export default function UserManagement() {
                           <Eye className="w-3.5 h-3.5" /> View
                         </button>
                         <button
-                          onClick={() => handleDeleteUser(user.id)}
+                          onClick={() => handleDeleteClick(user)}
                           className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-600 hover:text-white rounded-lg transition-all"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -246,6 +261,85 @@ export default function UserManagement() {
           </div>
         </div>
       )}
+
+      {/* ✅ Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && userToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-2xl">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-dark">Delete User</h2>
+                  <p className="text-sm text-gray-500">This action cannot be undone</p>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="mb-6">
+                <p className="text-gray-600">
+                  Are you sure you want to delete the user 
+                  <strong className="text-dark"> "{userToDelete.username}"</strong>?
+                </p>
+                <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                  <p className="text-sm text-red-600 flex items-center gap-2">
+                    <span>🚨</span>
+                    This will permanently remove:
+                  </p>
+                  <ul className="mt-2 text-sm text-red-600 list-disc list-inside space-y-1">
+                    <li>User account and profile</li>
+                    <li>All progress data</li>
+                    <li>All activity logs</li>
+                    <li>All feedback submissions</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setUserToDelete(null)
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className={`flex-1 px-4 py-2.5 rounded-lg font-semibold text-white transition-colors ${
+                    isDeleting
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-red-500 hover:bg-red-600'
+                  }`}
+                >
+                  {isDeleting ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Deleting...
+                    </span>
+                  ) : (
+                    'Yes, Delete User'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

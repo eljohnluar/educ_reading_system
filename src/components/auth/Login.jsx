@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
@@ -11,8 +11,18 @@ export default function Login() {
   const [token, setToken] = useState('')
   const [step, setStep] = useState(1) // 1: Email & Password, 2: OTP
   const [loading, setLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const navigate = useNavigate()
   const { sendOtp, verifyOtp } = useAuth()
+
+  // ✅ Load saved email from localStorage on mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail')
+    if (savedEmail) {
+      setEmail(savedEmail)
+      setRememberMe(true)
+    }
+  }, [])
 
   const handleVerifyPassword = async (e) => {
     e.preventDefault()
@@ -50,6 +60,13 @@ export default function Login() {
       
       if (!response || !response.user) {
         throw new Error('Verification failed. Please try again.')
+      }
+
+      // ✅ If "Remember Me" is checked, save email
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email)
+      } else {
+        localStorage.removeItem('rememberedEmail')
       }
 
       const { data: profile, error: profileError } = await supabase
@@ -150,10 +167,12 @@ export default function Login() {
             </div>
 
             <div className="flex items-center justify-between">
-              <label className="flex items-center">
+              <label className="flex items-center cursor-pointer">
                 <input 
-                  type="checkbox" 
-                  className="rounded border-gray-300 text-gold focus:ring-gold"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="rounded border-gray-300 text-gold focus:ring-gold h-4 w-4"
                   disabled={loading}
                 />
                 <span className="ml-2 text-sm text-gray-600">Remember me</span>

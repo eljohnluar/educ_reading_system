@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
+import '../landing/LandingPage.css'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -25,8 +26,30 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white p-4">
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-8 max-w-md w-full">
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #2C3E50 0%, #3d566e 40%, #E9D2A9 100%)'
+      }}
+    >
+      {/* Floating decorative elements */}
+      <span className="floating-book">📚</span>
+      <span className="floating-book">📖</span>
+      <span className="floating-book">✏️</span>
+      <span className="floating-book">🎓</span>
+      <span className="floating-book">📕</span>
+
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-md w-full border border-white/20 relative z-10">
+        {/* Back to Home */}
+        <Link
+          to="/"
+          className="inline-flex items-center text-sm text-gray-500 hover:text-dark transition-colors mb-6 group"
+        >
+          <span className="mr-1 transition-transform group-hover:-translate-x-1">←</span>
+          Back to Home
+        </Link>
+
+        {/* Header */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-dark">Reset Password</h2>
           <p className="text-gray-500 mt-2">
@@ -46,6 +69,7 @@ export default function ForgotPassword() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold focus:border-transparent outline-none transition-all"
               placeholder="you@example.com"
               required
+              disabled={loading}
             />
           </div>
 

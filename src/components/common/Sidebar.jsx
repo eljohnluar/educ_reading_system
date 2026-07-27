@@ -17,7 +17,7 @@ import {
 const userLinks = [
   { to: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { to: '/profile', label: 'Profile', Icon: User },
-  { to: '/leadership', label: 'Leadership Board', Icon: Trophy },
+  { to: '/leadership', label: 'Leaderboard', Icon: Trophy },
 ]
 
 // Admin links - only for admins
