@@ -103,7 +103,7 @@ bash
 npm run dev
 Open your browser and visit http://localhost:5173.
 
- Project Structure
+### Project Structure
 
 src/
 
