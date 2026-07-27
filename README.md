@@ -8,7 +8,7 @@ Built with React, Vite, and Tailwind CSS, the platform offers a beautiful, respo
 
 ##  Live Demo
 
-**Live Demo:** [https://educ-reading-system.vercel.app/](https://educ-reading-system.vercel.app/)
+[Click here for live demo.](https://educ-reading-system.vercel.app/)
 
 ---
 
