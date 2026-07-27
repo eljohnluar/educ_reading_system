@@ -294,7 +294,7 @@ export default function Register() {
               <div className="space-y-4 text-gray-700">
                 <div className="bg-gold/10 rounded-xl p-4 border border-gold/20">
                   <p className="text-sm font-medium text-gold-dark">
-                    📌 Last Updated: January 2026
+                    📌 Last Updated: July 2026
                   </p>
                 </div>
 
