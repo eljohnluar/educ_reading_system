@@ -149,8 +149,39 @@ ALTER TABLE user_activity_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE quiz_questions ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
--- 3. RLS POLICIES
+-- 3. RLS POLICIES (IDEMPOTENT - DROP IF EXISTS)
 -- ============================================
+
+-- ----------------------------------------------------------------------------
+-- Drop all existing policies first (to avoid "already exists" errors)
+-- ----------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Users can view all profiles" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+
+DROP POLICY IF EXISTS "Users can view own progress" ON user_progress;
+DROP POLICY IF EXISTS "Users can insert own progress" ON user_progress;
+DROP POLICY IF EXISTS "Users can update own progress" ON user_progress;
+DROP POLICY IF EXISTS "Admins can view all progress" ON user_progress;
+
+DROP POLICY IF EXISTS "Only admins can view login attempts" ON login_attempts;
+DROP POLICY IF EXISTS "System can insert login attempts" ON login_attempts;
+
+DROP POLICY IF EXISTS "Users can view own reset requests" ON password_resets;
+DROP POLICY IF EXISTS "System can insert reset requests" ON password_resets;
+
+DROP POLICY IF EXISTS "Anyone can view feedback" ON feedback;
+DROP POLICY IF EXISTS "Users can insert own feedback" ON feedback;
+DROP POLICY IF EXISTS "Users can update own feedback" ON feedback;
+
+DROP POLICY IF EXISTS "Anyone can view active stories" ON story_metadata;
+DROP POLICY IF EXISTS "Admins can manage stories" ON story_metadata;
+
+DROP POLICY IF EXISTS "Only admins can view activity logs" ON user_activity_log;
+DROP POLICY IF EXISTS "System can insert activity logs" ON user_activity_log;
+
+DROP POLICY IF EXISTS "Anyone can view quiz questions" ON quiz_questions;
+DROP POLICY IF EXISTS "Only admins can modify quiz questions" ON quiz_questions;
 
 -- ----------------------------------------------------------------------------
 -- Profiles Policies
@@ -435,6 +466,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trigger_handle_new_user ON auth.users;
 CREATE TRIGGER trigger_handle_new_user
   AFTER INSERT ON auth.users
   FOR EACH ROW
@@ -451,18 +483,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_profiles_updated_at ON profiles;
 CREATE TRIGGER trigger_update_profiles_updated_at
 BEFORE UPDATE ON profiles
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS trigger_update_story_metadata_updated_at ON story_metadata;
 CREATE TRIGGER trigger_update_story_metadata_updated_at
 BEFORE UPDATE ON story_metadata
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
--- 6. STORAGE BUCKET SETUP
+-- 6. STORAGE BUCKET SETUP (IDEMPOTENT)
 -- ============================================
 
 -- ----------------------------------------------------------------------------
@@ -479,21 +513,34 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
--- Avatars Bucket (for user profile images) - ✅ ADDED
+-- Avatars Bucket (for user profile images)
 -- ----------------------------------------------------------------------------
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES (
   'avatars',
   'avatars',
-  true, -- Public bucket so images can be viewed without auth
+  true,
   2097152, -- 2MB limit
   ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
 )
 ON CONFLICT (id) DO NOTHING;
 
 -- ============================================
--- 7. STORAGE POLICIES
+-- 7. STORAGE POLICIES (IDEMPOTENT)
 -- ============================================
+
+-- ----------------------------------------------------------------------------
+-- Drop existing storage policies first
+-- ----------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Anyone can view stories" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can upload stories" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can update stories" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can delete stories" ON storage.objects;
+DROP POLICY IF EXISTS "Anyone can view avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Users can upload their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can update their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Users can delete their own avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Admins can manage all avatars" ON storage.objects;
 
 -- ----------------------------------------------------------------------------
 -- Stories Policies
@@ -520,7 +567,7 @@ CREATE POLICY "Admins can delete stories" ON storage.objects
   );
 
 -- ----------------------------------------------------------------------------
--- Avatars Policies - ✅ ADDED
+-- Avatars Policies
 -- ----------------------------------------------------------------------------
 CREATE POLICY "Anyone can view avatars" ON storage.objects
   FOR SELECT USING (bucket_id = 'avatars');
