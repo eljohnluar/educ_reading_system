@@ -87,16 +87,6 @@ export default function LandingPage() {
         <span className="floating-book">🎓</span>
         <span className="floating-book">📕</span>
 
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0}
-          className="hero-badge"
-        >
-           Gamified English Reading System
-        </motion.div>
-
         <motion.h1
           className="hero-title"
           initial="hidden"

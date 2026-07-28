@@ -327,11 +327,11 @@ a {
 }
 
 .story-word.active {
-  @apply bg-gold text-dark px-0.5 rounded;
+  @apply bg-emerald-500 text-white px-0.5 rounded font-bold;
 }
 
 .story-word.past {
-  @apply text-success;
+  @apply font-bold text-dark;
 }
 
 /* ============================================

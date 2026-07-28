@@ -172,8 +172,8 @@ export default function StoryReader() {
               <span
                 ref={(el) => (wordRefs.current[currentIndex] = el)}
                 className={`transition-colors duration-75 px-1 py-0.5 rounded-lg ${
-                  isActive ? 'bg-gold font-bold text-dark' : 
-                  isPast ? 'text-medium opacity-80' : 'text-dark'
+                  isActive ? 'bg-emerald-500 text-white font-bold shadow-sm' : 
+                  isPast ? 'font-bold text-dark' : 'text-dark font-normal'
                 }`}
               >
                 {cleanWord}
