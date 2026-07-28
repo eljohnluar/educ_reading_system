@@ -234,13 +234,13 @@ export default function Register() {
             />
             <label className="ml-2 text-sm text-gray-600">
               I agree to the{' '}
-              <button
-                type="button"
-                onClick={() => setShowPrivacyModal(true)}
+              <Link
+                to="/privacy"
+                target="_blank"
                 className="text-gold hover:underline font-medium"
               >
                 Privacy Policy
-              </button>
+              </Link>
             </label>
           </div>
 
@@ -265,7 +265,7 @@ export default function Register() {
         </p>
       </div>
 
-      {/* ✅ Privacy Policy Modal */}
+      {/* Privacy Policy Modal */}
       <AnimatePresence>
         {showPrivacyModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -278,7 +278,7 @@ export default function Register() {
               {/* Modal Header */}
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
                 <h2 className="text-2xl font-bold text-dark flex items-center gap-2">
-                  <span className="text-3xl"></span> Privacy Policy
+                  <span className="text-3xl">🔒</span> Privacy Policy
                 </h2>
                 <button
                   onClick={() => setShowPrivacyModal(false)}

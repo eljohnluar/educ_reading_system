@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import { ProgressProvider } from './context/ProgressContext'
 import ProtectedRoute from './components/common/ProtectedRoute'
+import CookieConsent from './components/common/CookieConsent'
 
 // Landing Page
 import LandingPage from './components/landing/LandingPage'
@@ -16,6 +17,9 @@ import ResetPassword from './components/auth/ResetPassword'
 
 // Loading Screen
 import StudentEvolutionLoader from './components/common/StudentEvolutionLoader'
+
+// ✅ Import Privacy Policy
+import PrivacyPolicy from './components/common/PrivacyPolicy'
 
 // User Pages
 import Dashboard from './components/user/Dashboard'
@@ -39,17 +43,16 @@ function App() {
         <Router>
           <Toaster position="top-right" />
           <Routes>
-            {/* Landing Page (Public) */}
+            {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
-
-            {/* Auth Routes (Public) */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-
-            {/* Loading Screen (Public - plays after login) */}
             <Route path="/loading" element={<StudentEvolutionLoader />} />
+
+            {/* ✅ Privacy Policy - Public (Guest & Logged In) */}
+            <Route path="/privacy" element={<PrivacyPolicy />} />
 
             {/* Protected User Routes */}
             <Route element={<ProtectedRoute />}>
@@ -63,7 +66,7 @@ function App() {
               </Route>
             </Route>
 
-            {/* Protected Admin Routes - requireAdmin={true} */}
+            {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute requireAdmin={true} />}>
               <Route element={<Layout />}>
                 <Route path="/admin" element={<AdminDashboard />} />
@@ -76,6 +79,8 @@ function App() {
             {/* Catch All */}
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
+
+          <CookieConsent />
         </Router>
       </ProgressProvider>
     </AuthProvider>

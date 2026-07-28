@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import './StudentEvolutionLoader.css'
 
+const BOOKS = ['📚', '📖', '📕', '📗', '📘', '📙', '📓', '📔']
+
 const STAGES = [
-  { id: 'preschool', emoji: '🧒🎒', label: 'Pre-School', threshold: 0 },
-  { id: 'highschool', emoji: '👦📚', label: 'High School', threshold: 33 },
-  { id: 'college', emoji: '🧑‍🎓', label: 'College', threshold: 66 },
+  { id: 'preschool', label: 'Pre-School', emoji: '🧒' },
+  { id: 'highschool', label: 'High School', emoji: '👦' },
+  { id: 'college', label: 'College', emoji: '🧑‍🎓' },
 ]
 
-const TOTAL_DURATION = 4500 // ms
+const TOTAL_DURATION = 1600 // ms (1.6 seconds - faster)
 
 export default function StudentEvolutionLoader() {
   const navigate = useNavigate()
@@ -18,8 +20,8 @@ export default function StudentEvolutionLoader() {
   const [flash, setFlash] = useState(false)
   const startRef = useRef(null)
   const rafRef = useRef(null)
+  const flashTimeoutRef = useRef(null)
 
-  // Determine redirect destination from location state, default to /dashboard
   const destination = location.state?.redirectTo || '/dashboard'
 
   useEffect(() => {
@@ -30,32 +32,22 @@ export default function StudentEvolutionLoader() {
       const pct = Math.min((elapsed / TOTAL_DURATION) * 100, 100)
       setProgress(pct)
 
-      // Update stage
-      if (pct >= 66) {
-        setCurrentStage((prev) => {
-          if (prev !== 2) {
-            setFlash(true)
-            setTimeout(() => setFlash(false), 400)
-          }
-          return 2
-        })
-      } else if (pct >= 33) {
-        setCurrentStage((prev) => {
-          if (prev !== 1) {
-            setFlash(true)
-            setTimeout(() => setFlash(false), 400)
-          }
-          return 1
-        })
-      }
+      const newStage = pct >= 66 ? 2 : pct >= 33 ? 1 : 0
+      setCurrentStage((prev) => {
+        if (newStage !== prev) {
+          setFlash(true)
+          if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current)
+          flashTimeoutRef.current = setTimeout(() => setFlash(false), 250)
+          return newStage
+        }
+        return prev
+      })
 
       if (pct < 100) {
         rafRef.current = requestAnimationFrame(tick)
       } else {
-        // Animation complete — navigate to destination
-        setTimeout(() => {
-          navigate(destination, { replace: true })
-        }, 400)
+        rafRef.current = null
+        setTimeout(() => navigate(destination, { replace: true }), 200)
       }
     }
 
@@ -63,89 +55,91 @@ export default function StudentEvolutionLoader() {
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current)
     }
   }, [navigate, destination])
 
-  // Calculate walker position (5% to 90% of path width)
-  const walkerLeft = 5 + (progress / 100) * 85
+  const currentStageData = STAGES[currentStage] || STAGES[0]
+
+  // Calculate which books should be active based on progress
+  const activeBooksCount = Math.floor((progress / 100) * BOOKS.length)
 
   return (
     <div className="evolution-loader">
-      {/* Stage transition flash */}
       <div className={`stage-flash ${flash ? 'active' : ''}`} />
 
       <div className="evolution-content">
+        {/* Title */}
         <p className="evolution-title">
-          Your learning journey is loading...
+          {progress < 33 && '🌱 Starting your learning journey...'}
+          {progress >= 33 && progress < 66 && '📚 Growing into a scholar...'}
+          {progress >= 66 && progress < 100 && '🎓 Becoming a graduate...'}
+          {progress === 100 && '🎉 Welcome!'}
         </p>
 
-        {/* Path with walker */}
-        <div className="evolution-path">
-          {/* Road */}
-          <div className="road">
-            <div
-              className="road-progress"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-          {/* Walking character */}
-          <div
-            className="walker-container"
-            style={{ left: `${walkerLeft}%` }}
-          >
-            <div className="walker">
-              <div className="character-glow" />
-              {STAGES.map((stage, index) => (
-                <div
-                  key={stage.id}
-                  className={`character-stage ${
-                    currentStage === index ? 'visible' : 'hidden'
-                  }`}
-                >
-                  <span className="character-emoji">{stage.emoji}</span>
-                  <span className="character-label">{stage.label}</span>
-                </div>
-              ))}
+        {/* Circle of Books */}
+        <div className="book-circle-container">
+          <div className="book-circle-wrapper">
+            <div className="book-circle">
+              {BOOKS.map((book, index) => {
+                const angle = (index / BOOKS.length) * 360
+                const radius = 75
+                const x = radius * Math.cos((angle - 90) * Math.PI / 180)
+                const y = radius * Math.sin((angle - 90) * Math.PI / 180)
+                const isActive = index < activeBooksCount
+                
+                return (
+                  <div
+                    key={index}
+                    className={`book-item ${isActive ? 'active' : ''}`}
+                    style={{
+                      '--x': `${x}px`,
+                      '--y': `${y}px`,
+                      '--angle': `${angle}deg`,
+                    }}
+                  >
+                    {book}
+                  </div>
+                )
+              })}
             </div>
-          </div>
 
-          {/* Stage milestones */}
-          <div className="stage-milestones">
-            {STAGES.map((stage, index) => (
-              <div
-                key={stage.id}
-                className={`milestone ${
-                  currentStage === index
-                    ? 'active'
-                    : currentStage > index
-                    ? 'completed'
-                    : ''
-                }`}
-              >
-                <div className="milestone-dot" />
-                <span className="milestone-label">{stage.label}</span>
-              </div>
-            ))}
+            {/* Center - Static, Evolving */}
+            <div className="center-book">
+              <span className="center-emoji">
+                {currentStageData.emoji}
+              </span>
+              <span className="center-label">{currentStageData.label}</span>
+            </div>
           </div>
         </div>
 
-        {/* Progress bar */}
+        {/* Stage Milestones */}
+        <div className="stage-milestones">
+          {STAGES.map((stage, index) => (
+            <div
+              key={stage.id}
+              className={`milestone ${currentStage >= index ? 'active' : ''}`}
+            >
+              <div className="milestone-dot" />
+              <span className="milestone-label">{stage.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Progress Bar */}
         <div className="evolution-progress-bar">
           <div className="progress-track">
-            <div
-              className="progress-fill"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="progress-fill" style={{ width: `${progress}%` }} />
           </div>
           <p className="progress-text">
             {progress < 33
-              ? 'Starting your journey...'
+              ? '🌟 Starting your journey...'
               : progress < 66
-              ? 'Growing stronger...'
+              ? '📖 Learning and growing...'
               : progress < 100
-              ? 'Almost there...'
-              : 'Welcome!'}
+              ? '🎯 Almost there...'
+              : '🎉 Welcome!'}
           </p>
         </div>
       </div>

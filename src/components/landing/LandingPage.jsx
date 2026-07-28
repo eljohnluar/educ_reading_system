@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../../context/AuthContext'
 import LandingNavbar from './LandingNavbar'
+// ❌ Remove: import CookieConsent from '../common/CookieConsent'
 import './LandingPage.css'
 
 const fadeUp = {
@@ -298,6 +299,8 @@ export default function LandingPage() {
           <span className="footer-brand">Read Well English Zone</span>. All rights reserved.
         </p>
       </footer>
+
+      {/* ❌ CookieConsent REMOVED - Now in App.jsx */}
     </div>
   )
 }
