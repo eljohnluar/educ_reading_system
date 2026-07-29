@@ -24,7 +24,7 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const navigate = useNavigate()
 
-  // Admin code (change this)
+  // Admin code (change this) 
   const ADMIN_CODE = 'ADMIN2026'
 
   const handleChange = (e) => {

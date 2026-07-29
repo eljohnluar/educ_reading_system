@@ -18,7 +18,7 @@ export default function ResetPassword() {
   const navigate = useNavigate()
   const { updatePassword } = useAuth()
 
-  // ✅ Check if user came from reset link
+  // ✅ Check if user came from reset link 
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()

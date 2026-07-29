@@ -1,5 +1,5 @@
 /**
- * Utility functions for evaluating and validating password strength
+ * Utility functions for evaluating and validating passwordstrength
  */
 
 export const PASSWORD_REQUIREMENTS = [

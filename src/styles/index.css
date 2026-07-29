@@ -75,7 +75,7 @@ a {
   transition: none;
 }
 
-/* ----- Utility Classes ----- */
+/* ----- Utility Classes ---- */
 .text-gold {
   color: var(--gold);
 }

@@ -290,7 +290,7 @@ export default function LandingPage() {
         </p>
       </footer>
 
-      {/* ❌ CookieConsent REMOVED - Now in App.jsx */}
+      {/* ❌ CookieConsent REMOVED - Now in App.jsx  */}
     </div>
   )
 }

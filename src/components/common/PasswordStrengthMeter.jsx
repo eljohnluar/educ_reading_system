@@ -8,7 +8,7 @@ export default function PasswordStrengthMeter({ password = '', showChecklist = t
   const evaluation = evaluatePassword(password)
   const { score, label, color, textColor, checks } = evaluation
 
-  // 4 segments calculation
+  // 4 segments calculation 
   const getSegmentBg = (index) => {
     if (score >= index) {
       return color

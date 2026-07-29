@@ -24,7 +24,7 @@ export default function StoryReader() {
 
   const VALID_LEVELS = ['easy', 'average', 'difficult']
 
-  // Validate level
+  // Validate level 
   useEffect(() => {
     if (!VALID_LEVELS.includes(level)) {
       setError(`The "${level}" reading level was not found.`)

@@ -71,7 +71,7 @@ export default function Profile() {
     const file = event.target.files[0]
     if (!file) return
 
-    // Validate file type
+    // Validate file type 
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file')
       return
