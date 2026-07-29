@@ -50,14 +50,8 @@ export default function PrivacyPolicy() {
 
       {/* Hero Section - Matching Landing Page */}
       <section className="privacy-hero">
-        <span className="floating-book">📚</span>
-        <span className="floating-book">📖</span>
-        <span className="floating-book">✏️</span>
-        <span className="floating-book">🎓</span>
-        <span className="floating-book">📕</span>
-
         <div className="privacy-hero-content">
-          <div className="privacy-hero-badge">🔒 Privacy Policy</div>
+          <div className="privacy-hero-badge">Privacy Policy</div>
           <h1 className="privacy-hero-title">
             Your Privacy <span className="highlight">Matters to Us</span>
           </h1>
@@ -65,7 +59,7 @@ export default function PrivacyPolicy() {
             Read Well English Zone is committed to protecting your personal information.
             Learn how we collect, use, and safeguard your data.
           </p>
-          <p className="privacy-hero-date">Last Updated: January 2026</p>
+          <p className="privacy-hero-date">Last Updated: July 2026</p>
         </div>
       </section>
 
@@ -74,7 +68,6 @@ export default function PrivacyPolicy() {
         <div className="privacy-content-inner">
           {/* Section 1 */}
           <div className="privacy-section">
-            <div className="privacy-section-icon">📋</div>
             <h2 className="privacy-section-title">1. Information We Collect</h2>
             <p className="privacy-section-text">
               When you create an account and use Read Well English Zone, we collect the following information:
@@ -90,7 +83,6 @@ export default function PrivacyPolicy() {
 
           {/* Section 2 */}
           <div className="privacy-section">
-            <div className="privacy-section-icon">🔧</div>
             <h2 className="privacy-section-title">2. How We Use Your Information</h2>
             <ul className="privacy-section-list">
               <li>To create and manage your account</li>
@@ -104,12 +96,10 @@ export default function PrivacyPolicy() {
 
           {/* Section 3 */}
           <div className="privacy-section">
-            <div className="privacy-section-icon">🔐</div>
             <h2 className="privacy-section-title">3. Data Storage & Security</h2>
             <ul className="privacy-section-list">
               <li>Your data is stored securely on our servers using industry-standard encryption</li>
               <li>Your password is never stored in plain text</li>
-              <li>We use Supabase for secure authentication and database management</li>
               <li>Regular security audits and updates are performed</li>
               <li>You can request data deletion at any time</li>
             </ul>
@@ -117,7 +107,6 @@ export default function PrivacyPolicy() {
 
           {/* Section 4 */}
           <div className="privacy-section">
-            <div className="privacy-section-icon">🍪</div>
             <h2 className="privacy-section-title">4. Cookies</h2>
             <p className="privacy-section-text">
               We use essential cookies to keep you logged in and remember your preferences. 
@@ -151,7 +140,6 @@ export default function PrivacyPolicy() {
 
           {/* Section 5 */}
           <div className="privacy-section">
-            <div className="privacy-section-icon">⚖️</div>
             <h2 className="privacy-section-title">5. Your Rights</h2>
             <p className="privacy-section-text">You have the right to:</p>
             <ul className="privacy-section-list">
@@ -165,25 +153,7 @@ export default function PrivacyPolicy() {
 
           {/* Section 6 */}
           <div className="privacy-section">
-            <div className="privacy-section-icon">🌐</div>
-            <h2 className="privacy-section-title">6. Third-Party Services</h2>
-            <p className="privacy-section-text">
-              We use trusted third-party services to provide our platform:
-            </p>
-            <ul className="privacy-section-list">
-              <li><strong>Supabase</strong> - Authentication, database, and storage</li>
-              <li><strong>Vercel</strong> - Application hosting and deployment</li>
-              <li><strong>Google Cloud</strong> - For email services (verification, password reset)</li>
-            </ul>
-            <p className="privacy-section-note">
-              Each third-party service adheres to their own privacy policies and security standards.
-            </p>
-          </div>
-
-          {/* Section 7 */}
-          <div className="privacy-section">
-            <div className="privacy-section-icon">👶</div>
-            <h2 className="privacy-section-title">7. Children's Privacy</h2>
+            <h2 className="privacy-section-title">6. Children's Privacy</h2>
             <p className="privacy-section-text">
               Read Well English Zone is designed for learners of all ages. We do not knowingly 
               collect personal information from children without parental consent. If you believe 
@@ -191,10 +161,9 @@ export default function PrivacyPolicy() {
             </p>
           </div>
 
-          {/* Section 8 */}
+          {/* Section 7 */}
           <div className="privacy-section">
-            <div className="privacy-section-icon">🔄</div>
-            <h2 className="privacy-section-title">8. Changes to This Policy</h2>
+            <h2 className="privacy-section-title">7. Changes to This Policy</h2>
             <p className="privacy-section-text">
               We may update this Privacy Policy from time to time. We will notify you of any 
               significant changes by posting the new policy on this page and updating the 
@@ -202,17 +171,15 @@ export default function PrivacyPolicy() {
             </p>
           </div>
 
-          {/* Section 9 */}
+          {/* Section 8 */}
           <div className="privacy-section">
-            <div className="privacy-section-icon">📧</div>
-            <h2 className="privacy-section-title">9. Contact Us</h2>
+            <h2 className="privacy-section-title">8. Contact Us</h2>
             <p className="privacy-section-text">
               If you have any questions, concerns, or requests regarding your privacy, 
               please contact us:
             </p>
             <div className="privacy-contact">
               <div className="privacy-contact-item">
-                <span className="privacy-contact-icon">📧</span>
                 <div>
                   <p className="privacy-contact-label">Email</p>
                   <a href="mailto:support@readwellzone.com" className="privacy-contact-link">
@@ -221,7 +188,6 @@ export default function PrivacyPolicy() {
                 </div>
               </div>
               <div className="privacy-contact-item">
-                <span className="privacy-contact-icon">🌐</span>
                 <div>
                   <p className="privacy-contact-label">Website</p>
                   <a href="https://educ-reading-system.vercel.app" className="privacy-contact-link" target="_blank" rel="noopener noreferrer">
