@@ -69,7 +69,7 @@ const steps = [
 export default function LandingPage() {
   const { user, loading } = useAuth()
 
-  // If the user is already logged in, redirect to dashboard
+  // If the user is already logged in,redirect to dashboard
   if (!loading && user) {
     return <Navigate to="/dashboard" replace />
   }
