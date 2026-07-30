@@ -18,7 +18,7 @@ const fadeUp = {
 const features = [
   {
     icon: '🎮',
-    title: 'Gamified Learning',
+    title: ' Learning',
     desc: 'Turn reading practice into an exciting adventure with points, levels, and rewards that keep you motivated.',
     bg: 'rgba(139, 195, 74, 0.12)',
     accent: '#8BC34A',
@@ -105,7 +105,7 @@ export default function LandingPage() {
           variants={fadeUp}
           custom={2}
         >
-          An interactive, gamified platform that helps students improve their
+          An interactive,  platform that helps students improve their
           English comprehension through engaging stories, quizzes, and
           progressive difficulty levels.
         </motion.p>
@@ -273,7 +273,7 @@ export default function LandingPage() {
         >
           <h2 className="cta-title">Ready to Begin Your Journey?</h2>
           <p className="cta-subtitle">
-            Join students who are already improving their English reading skills through our gamified learning platform.
+            Join students who are already improving their English reading skills through our learning platform.
           </p>
           <br />
           <Link to="/register" className="btn-dark">
