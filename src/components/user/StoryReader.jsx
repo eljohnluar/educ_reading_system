@@ -148,7 +148,7 @@ export default function StoryReader() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [togglePlay])
 
-  // Render content with highlighting
+  // Render content with highlighting - FIXED: No font-weight changes
   const renderContentWithHighlight = useCallback(() => {
     if (!content) return null
 
@@ -171,10 +171,19 @@ export default function StoryReader() {
             <React.Fragment key={currentIndex}>
               <span
                 ref={(el) => (wordRefs.current[currentIndex] = el)}
-                className={`transition-colors duration-75 px-1 py-0.5 rounded-lg ${
-                  isActive ? 'bg-emerald-500 text-white font-bold shadow-sm' : 
-                  isPast ? 'font-bold text-dark' : 'text-dark font-normal'
+                // 🔥 FIX: Use consistent styling - NO font-weight changes
+                className={`inline-block transition-colors duration-75 px-1 py-0.5 rounded-lg ${
+                  isActive 
+                    ? 'bg-emerald-500 text-white shadow-sm' 
+                    : isPast 
+                    ? 'text-dark' 
+                    : 'text-dark'
                 }`}
+                style={{
+                  // 🔥 FIX: Force consistent font-weight to prevent width changes
+                  fontWeight: '400',
+                  fontFeatureSettings: '"palt" 1', // Prevents letter-spacing changes
+                }}
               >
                 {cleanWord}
                 <span className="text-inherit">{punctuation}</span>
