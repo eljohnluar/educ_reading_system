@@ -148,7 +148,7 @@ export default function StoryReader() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [togglePlay])
 
-  // Render content with highlighting - FIXED: No font-weight changes
+  // 🔥 FIXED: Render content with NO bold - all plain text
   const renderContentWithHighlight = useCallback(() => {
     if (!content) return null
 
@@ -160,7 +160,6 @@ export default function StoryReader() {
         {paragraph.split(' ').map((word) => {
           const currentIndex = wordCounter
           const isActive = currentIndex === currentWordIndex
-          const isPast = currentIndex < currentWordIndex
 
           const cleanWord = word.replace(/[.,!?;:()"]/g, '')
           const punctuation = word.replace(/[a-zA-Z0-9']/g, '')
@@ -171,18 +170,15 @@ export default function StoryReader() {
             <React.Fragment key={currentIndex}>
               <span
                 ref={(el) => (wordRefs.current[currentIndex] = el)}
-                // 🔥 FIX: Use consistent styling - NO font-weight changes
-                className={`inline-block transition-colors duration-75 px-1 py-0.5 rounded-lg ${
+                // 🔥 ALL TEXT IS PLAIN - no bold, no font-weight changes EVER
+                className={`inline-block transition-colors duration-75 px-1 py-0.5 rounded ${
                   isActive 
-                    ? 'bg-emerald-500 text-white shadow-sm' 
-                    : isPast 
-                    ? 'text-dark' 
+                    ? 'bg-emerald-500 text-white' 
                     : 'text-dark'
                 }`}
                 style={{
-                  // 🔥 FIX: Force consistent font-weight to prevent width changes
-                  fontWeight: '400',
-                  fontFeatureSettings: '"palt" 1', // Prevents letter-spacing changes
+                  fontWeight: '400', // Force plain weight
+                  fontFeatureSettings: '"palt" 1',
                 }}
               >
                 {cleanWord}
